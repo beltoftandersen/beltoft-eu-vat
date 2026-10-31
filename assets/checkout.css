@@ -1,0 +1,14 @@
+.beltoft-eu-vat-message {
+	display: block;
+	margin-top: 0.4em;
+	font-size: 0.9em;
+}
+.beltoft-eu-vat-message:empty {
+	display: none;
+}
+.beltoft-eu-vat-message.is-error {
+	color: #b32d2e;
+}
+.beltoft-eu-vat-message.is-valid {
+	color: #1e7b34;
+}

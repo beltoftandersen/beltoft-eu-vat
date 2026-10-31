@@ -1,0 +1,328 @@
+# Copyright (C) 2026 beltoft.net
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Beltoft EU VAT for WooCommerce 0.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/beltoft-eu-vat\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-10-31T19:03:13+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: beltoft-eu-vat\n"
+
+#. Plugin Name of the plugin
+#: beltoft-eu-vat.php
+msgid "Beltoft EU VAT for WooCommerce"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: beltoft-eu-vat.php
+msgid "https://beltoft.net/"
+msgstr ""
+
+#. Description of the plugin
+#: beltoft-eu-vat.php
+msgid "An optional EU VAT number field at checkout, checked against VIES. A valid number from another EU country removes VAT (reverse charge) and the evidence is stored on the order."
+msgstr ""
+
+#. Author of the plugin
+#: beltoft-eu-vat.php
+msgid "beltoft.net"
+msgstr ""
+
+#. Author URI of the plugin
+#: beltoft-eu-vat.php
+msgid "https://beltoft.net"
+msgstr ""
+
+#: src/AccountUpdate.php:74
+msgid "No VAT number could be read from what you typed."
+msgstr ""
+
+#: src/AccountUpdate.php:76
+#: src/Messages.php:25
+msgid "This VAT number is from a different country than your billing address. Change the billing country to the VAT number's country, or leave the field empty."
+msgstr ""
+
+#: src/AccountUpdate.php:78
+#: src/Messages.php:27
+msgid "The VAT number you entered is not valid. Please correct it or leave the field empty."
+msgstr ""
+
+#: src/AccountUpdate.php:80
+#: src/Messages.php:29
+msgid "The VAT number you entered could not be validated. Please correct it or leave the field empty."
+msgstr ""
+
+#: src/Countries.php:49
+msgid "Northern Ireland"
+msgstr ""
+
+#: src/Countries.php:85
+msgid "Austrian"
+msgstr ""
+
+#: src/Countries.php:86
+msgid "Belgian"
+msgstr ""
+
+#: src/Countries.php:87
+msgid "Bulgarian"
+msgstr ""
+
+#: src/Countries.php:88
+msgid "Cypriot"
+msgstr ""
+
+#: src/Countries.php:89
+msgid "Czech"
+msgstr ""
+
+#: src/Countries.php:90
+msgid "German"
+msgstr ""
+
+#: src/Countries.php:91
+msgid "Danish"
+msgstr ""
+
+#: src/Countries.php:92
+msgid "Estonian"
+msgstr ""
+
+#: src/Countries.php:93
+msgid "Spanish"
+msgstr ""
+
+#: src/Countries.php:94
+msgid "Finnish"
+msgstr ""
+
+#: src/Countries.php:95
+msgid "French"
+msgstr ""
+
+#: src/Countries.php:96
+msgid "Greek"
+msgstr ""
+
+#: src/Countries.php:97
+msgid "Croatian"
+msgstr ""
+
+#: src/Countries.php:98
+msgid "Hungarian"
+msgstr ""
+
+#: src/Countries.php:99
+msgid "Irish"
+msgstr ""
+
+#: src/Countries.php:100
+msgid "Italian"
+msgstr ""
+
+#: src/Countries.php:101
+msgid "Lithuanian"
+msgstr ""
+
+#: src/Countries.php:102
+msgid "Luxembourg"
+msgstr ""
+
+#: src/Countries.php:103
+msgid "Latvian"
+msgstr ""
+
+#: src/Countries.php:104
+msgid "Maltese"
+msgstr ""
+
+#: src/Countries.php:105
+msgid "Dutch"
+msgstr ""
+
+#: src/Countries.php:106
+msgid "Polish"
+msgstr ""
+
+#: src/Countries.php:107
+msgid "Portuguese"
+msgstr ""
+
+#: src/Countries.php:108
+msgid "Romanian"
+msgstr ""
+
+#: src/Countries.php:109
+msgid "Swedish"
+msgstr ""
+
+#: src/Countries.php:110
+msgid "Slovenian"
+msgstr ""
+
+#: src/Countries.php:111
+msgid "Slovak"
+msgstr ""
+
+#: src/Messages.php:32
+msgid "The VAT number could not be checked right now. Please try again in a few minutes or leave the field empty."
+msgstr ""
+
+#: src/Messages.php:59
+msgid "VAT number confirmed. VAT is not charged (reverse charge)."
+msgstr ""
+
+#. translators: %s: adjective for the seller's country, for example Danish
+#: src/Messages.php:64
+#, php-format
+msgid "%s VAT is charged on domestic sales."
+msgstr ""
+
+#: src/Messages.php:76
+msgid "The VAT number could not be checked right now. VAT is charged and the order will be reviewed."
+msgstr ""
+
+#. translators: %s: detail from the VIES service
+#: src/OrderEvidence.php:78
+#, php-format
+msgid "VAT number could not be verified: VIES did not answer (%s). VAT was charged and this order needs review."
+msgstr ""
+
+#: src/OrderEvidence.php:79
+msgid "no detail"
+msgstr ""
+
+#: src/Plugin.php:55
+msgid "Beltoft EU VAT for WooCommerce needs WooCommerce to be active."
+msgstr ""
+
+#. translators: %s: order number
+#: src/ReviewQueue.php:68
+#, php-format
+msgid "VAT number could not be checked for order %s"
+msgstr ""
+
+#. translators: 1: order number, 2: VAT number, 3: link to the order
+#: src/ReviewQueue.php:74
+#, php-format
+msgid ""
+"VIES did not answer when order %1$s was placed, so VAT was charged and the order needs review.\n"
+"\n"
+"VAT number: %2$s\n"
+"\n"
+"Open the order: %3$s\n"
+"\n"
+"If the number is valid, refund the VAT. If it is not, nothing more is needed."
+msgstr ""
+
+#: src/ReviewQueue.php:94
+#: src/ReviewQueue.php:135
+msgid "EU VAT check"
+msgstr ""
+
+#: src/ReviewQueue.php:118
+msgid "Needs review"
+msgstr ""
+
+#: src/ReviewQueue.php:143
+msgid "Needs review: VIES did not answer, VAT was charged."
+msgstr ""
+
+#: src/ReviewQueue.php:144
+msgid "Mark as reviewed"
+msgstr ""
+
+#: src/ReviewQueue.php:148
+msgid "Status"
+msgstr ""
+
+#: src/ReviewQueue.php:149
+msgid "Consultation number"
+msgstr ""
+
+#: src/ReviewQueue.php:150
+msgid "Registered name"
+msgstr ""
+
+#: src/ReviewQueue.php:151
+msgid "Checked at"
+msgstr ""
+
+#: src/ReviewQueue.php:172
+msgid "You are not allowed to do this."
+msgstr ""
+
+#: src/ReviewQueue.php:179
+msgid "EU VAT check marked as reviewed."
+msgstr ""
+
+#: src/Settings.php:74
+#: src/SettingsPage.php:59
+msgid "EU VAT number"
+msgstr ""
+
+#: src/SettingsPage.php:38
+msgid "EU VAT"
+msgstr ""
+
+#: src/SettingsPage.php:55
+msgid "Store base country"
+msgstr ""
+
+#: src/SettingsPage.php:61
+msgid "An optional VAT number field at checkout. A valid number from another EU country is checked with VIES and VAT is removed (reverse charge)."
+msgstr ""
+
+#: src/SettingsPage.php:65
+msgid "Seller country"
+msgstr ""
+
+#: src/SettingsPage.php:66
+msgid "Numbers from this country are domestic sales: VAT is charged and VIES is not asked."
+msgstr ""
+
+#: src/SettingsPage.php:76
+msgid "Your own VAT number"
+msgstr ""
+
+#: src/SettingsPage.php:77
+msgid "With the country prefix, for example DK12345678. Sent to VIES as the requester so that VIES returns a consultation number, which is stored as evidence on the order."
+msgstr ""
+
+#: src/SettingsPage.php:85
+msgid "Field label"
+msgstr ""
+
+#: src/SettingsPage.php:86
+msgid "Leave empty for \"EU VAT number\"."
+msgstr ""
+
+#: src/SettingsPage.php:94
+msgid "When VIES does not answer"
+msgstr ""
+
+#: src/SettingsPage.php:95
+msgid "VIES goes offline now and then. An unreachable service never counts as an invalid number."
+msgstr ""
+
+#: src/SettingsPage.php:102
+msgid "Charge VAT and flag the order for review"
+msgstr ""
+
+#: src/SettingsPage.php:103
+msgid "Block the checkout"
+msgstr ""
+
+#: src/SettingsPage.php:108
+msgid "Review email"
+msgstr ""
+
+#: src/SettingsPage.php:109
+msgid "Receives a mail when an order is flagged. Leave empty to use the site administrator email."
+msgstr ""
