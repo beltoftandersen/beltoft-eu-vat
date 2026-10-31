@@ -44,6 +44,8 @@ final class Plugin {
 		Exemption::register();
 		OrderEvidence::register();
 		Account::register();
+		AddressFormat::register();
+		ReverseChargeNote::register();
 		ReviewQueue::register();
 	}
 

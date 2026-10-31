@@ -60,8 +60,11 @@ final class Messages {
 			case 'domestic':
 				return array(
 					sprintf(
-						/* translators: %s: adjective for the seller's country, for example Danish */
-						__( '%s VAT is charged on domestic sales.', 'beltoft-eu-vat' ),
+						$decision->confirmed
+							/* translators: %s: adjective for the seller's country, for example Danish */
+							? __( 'VAT number confirmed. %s VAT is charged on domestic sales.', 'beltoft-eu-vat' )
+							/* translators: %s: adjective for the seller's country, for example Danish */
+							: __( '%s VAT is charged on domestic sales.', 'beltoft-eu-vat' ),
 						Countries::adjective( Settings::seller_country() )
 					),
 					'info',

@@ -14,13 +14,64 @@ class ValidatorTest extends TestCase {
 		$this->assertFalse( $d->blocks_checkout );
 	}
 
-	public function test_a_number_of_the_sellers_country_is_domestic_and_never_asks_vies() {
+	public function test_a_valid_domestic_number_is_confirmed_but_never_exempt() {
 		$this->vies = 'valid';
 		$d          = Validator::decide( 'DK12345678', 'DK' );
 
 		$this->assertSame( 'domestic', $d->status );
+		$this->assertTrue( $d->confirmed );
 		$this->assertFalse( $d->exempt );
+		$this->assertFalse( $d->blocks_checkout );
+		$this->assertSame( 1, $this->requests );
+		$this->assertSame( 'DK', $this->bodies[0]['countryCode'] );
+		$this->assertSame( 'WAPI-TEST-1', $d->request_identifier );
+		$this->assertTrue( $d->consulted() );
+	}
+
+	public function test_an_invalid_domestic_number_blocks_the_checkout() {
+		$this->vies = 'invalid';
+		$d          = Validator::decide( 'DK12345678', 'DK' );
+
+		$this->assertSame( 'invalid', $d->status );
+		$this->assertTrue( $d->blocks_checkout );
+		$this->assertSame( \BeltoftEuVat\Messages::error( Validator::decide( 'DE123456789', 'DE' ) ), \BeltoftEuVat\Messages::error( $d ) );
+	}
+
+	public function test_an_unreachable_vies_lets_a_domestic_number_through_without_review() {
+		$d = Validator::decide( 'DK12345678', 'DK' );
+
+		$this->assertSame( 'domestic', $d->status );
+		$this->assertFalse( $d->confirmed );
+		$this->assertFalse( $d->blocks_checkout );
+		$this->assertFalse( $d->exempt );
+		$this->assertFalse( $d->consulted() );
+		$this->assertFalse( \BeltoftEuVat\Messages::blocks( $d ) );
+
+		$order = new \WC_Order();
+		$order->save();
+		\BeltoftEuVat\OrderEvidence::write( $order, $d );
+		$this->assertSame( '', $order->get_meta( '_beltoft_eu_vat_review' ) );
+	}
+
+	public function test_domestic_check_can_be_switched_off() {
+		update_option( Settings::CHECK_DOMESTIC, 'no' );
+		$this->vies = 'invalid';
+		$d          = Validator::decide( 'DK12345678', 'DK' );
+
+		$this->assertSame( 'domestic', $d->status );
+		$this->assertFalse( $d->confirmed );
 		$this->assertSame( 0, $this->requests );
+	}
+
+	public function test_domestic_message_says_confirmed_only_when_vies_confirmed() {
+		$this->vies = 'valid';
+		$text       = \BeltoftEuVat\Messages::for_field( Validator::decide( 'DK12345678', 'DK' ) )[0];
+		$this->assertSame( 'VAT number confirmed. Danish VAT is charged on domestic sales.', $text );
+
+		update_option( Settings::CHECK_DOMESTIC, 'no' );
+		\BeltoftEuVat\Decisions::reset();
+		$text = \BeltoftEuVat\Messages::for_field( Validator::decide( 'DK12345678', 'DK' ) )[0];
+		$this->assertSame( 'Danish VAT is charged on domestic sales.', $text );
 	}
 
 	public function test_seller_country_defaults_to_the_store_base_country() {

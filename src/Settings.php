@@ -19,6 +19,7 @@ final class Settings {
 	public const LABEL          = 'beltoft_eu_vat_label';
 	public const ON_UNREACHABLE = 'beltoft_eu_vat_on_unreachable';
 	public const ADMIN_EMAIL    = 'beltoft_eu_vat_admin_email';
+	public const CHECK_DOMESTIC = 'beltoft_eu_vat_check_domestic';
 
 	public const FLAG  = 'flag';
 	public const BLOCK = 'block';
@@ -87,6 +88,13 @@ final class Settings {
 	 */
 	public static function on_unreachable(): string {
 		return self::BLOCK === get_option( self::ON_UNREACHABLE, self::FLAG ) ? self::BLOCK : self::FLAG;
+	}
+
+	/**
+	 * Whether a number of the seller's own country is checked with VIES too. On by default.
+	 */
+	public static function check_domestic(): bool {
+		return 'no' !== get_option( self::CHECK_DOMESTIC, 'yes' );
 	}
 
 	/**

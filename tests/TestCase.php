@@ -25,7 +25,7 @@ abstract class TestCase extends \WP_UnitTestCase {
 	public function set_up(): void {
 		parent::set_up();
 
-		foreach ( array( Settings::SELLER_COUNTRY, Settings::OWN_NUMBER, Settings::LABEL, Settings::ON_UNREACHABLE, Settings::ADMIN_EMAIL ) as $option ) {
+		foreach ( array( Settings::SELLER_COUNTRY, Settings::OWN_NUMBER, Settings::LABEL, Settings::ON_UNREACHABLE, Settings::ADMIN_EMAIL, Settings::CHECK_DOMESTIC ) as $option ) {
 			delete_option( $option );
 		}
 

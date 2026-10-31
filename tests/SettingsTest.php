@@ -34,6 +34,18 @@ class SettingsTest extends TestCase {
 		$this->assertSame( 'VAT ID', Settings::label() );
 	}
 
+	public function test_domestic_check_setting_defaults_to_yes_and_saves() {
+		$this->assertTrue( Settings::check_domestic() );
+		$this->assertContains( Settings::CHECK_DOMESTIC, array_column( SettingsPage::settings( array(), 'beltoft-eu-vat' ), 'id' ) );
+
+		$_POST[ Settings::SELLER_COUNTRY ] = 'DK';
+		\WC_Admin_Settings::save_fields( SettingsPage::settings( array(), 'beltoft-eu-vat' ) );
+		$this->assertFalse( Settings::check_domestic(), 'an unticked box saves no' );
+
+		update_option( Settings::CHECK_DOMESTIC, 'yes' );
+		$this->assertTrue( Settings::check_domestic() );
+	}
+
 	public function test_sanitizers_reject_unknown_values() {
 		$this->assertSame( '', SettingsPage::sanitize_country( 'US' ) );
 		$this->assertSame( 'DK', SettingsPage::sanitize_country( 'dk' ) );

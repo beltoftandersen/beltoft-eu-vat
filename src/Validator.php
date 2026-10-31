@@ -14,7 +14,8 @@ defined( 'ABSPATH' ) || exit;
  * |----------------------------------------|----------------------------------------------------|
  * | Field empty                            | Consumer sale, VAT charged                         |
  * | Billing country outside the EU         | Ignored, no VIES call (export is a tax-rate matter)|
- * | Number of the seller's own country     | Domestic, no VIES call, no exemption, VAT charged  |
+ * | Number of the seller's own country     | Domestic: VIES checked (setting), never exempt,    |
+ * |                                        | VAT charged; invalid blocks, unreachable proceeds  |
  * | Other EU number, billing elsewhere     | Checkout blocked: reverse charge belongs to the    |
  * |                                        | number's own country                               |
  * | Other EU number, VIES valid            | Reverse charge (exempt), evidence stored           |
@@ -79,6 +80,12 @@ class Validator {
 			if ( false === LocalChecks::run( $country, $number, $raw ) ) {
 				$decision->status          = 'invalid_format';
 				$decision->blocks_checkout = true;
+
+				return $decision;
+			}
+
+			if ( Settings::check_domestic() ) {
+				self::check_domestic( $decision, $country, $number, $allow_remote );
 			}
 
 			return $decision;
@@ -122,6 +129,37 @@ class Validator {
 		$decision->blocks_checkout = true;
 
 		return $decision;
+	}
+
+	/**
+	 * Asks VIES about a domestic number. Valid is recorded as confirmed, invalid blocks the
+	 * checkout, unreachable proceeds unchanged (no tax effect, so nothing to review). Never
+	 * exempt.
+	 *
+	 * @param VatDecision $decision Decision, status domestic.
+	 * @param string      $country  The number's country.
+	 * @param string      $number   Number without prefix.
+	 * @param bool        $allow_remote False answers from the cache only.
+	 */
+	private static function check_domestic( VatDecision $decision, string $country, string $number, bool $allow_remote ): void {
+		$result = ViesClient::check( self::vies_code( $country ), $number, $allow_remote );
+
+		if ( $result->is_unreachable() ) {
+			return;
+		}
+
+		$decision->request_identifier = $result->request_identifier;
+		$decision->registered_name    = $result->registered_name;
+		$decision->checked_at         = $result->checked_at;
+
+		if ( $result->is_valid() ) {
+			$decision->confirmed = true;
+
+			return;
+		}
+
+		$decision->status          = 'invalid';
+		$decision->blocks_checkout = true;
 	}
 
 	/**

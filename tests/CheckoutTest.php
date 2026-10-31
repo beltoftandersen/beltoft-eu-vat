@@ -32,7 +32,21 @@ class CheckoutTest extends TestCase {
 		$html = $this->refresh( 'DK12345678', 'DK' );
 
 		$this->assertStringContainsString( 'Danish VAT is charged on domestic sales.', $html );
-		$this->assertSame( 0, $this->requests );
+		$this->assertStringNotContainsString( 'confirmed', $html );
+	}
+
+	public function test_a_confirmed_domestic_number_says_so() {
+		$this->vies = 'valid';
+		$html       = $this->refresh( 'DK12345678', 'DK' );
+
+		$this->assertStringContainsString( 'VAT number confirmed. Danish VAT is charged on domestic sales.', $html );
+	}
+
+	public function test_an_invalid_domestic_number_shows_the_invalid_message() {
+		$this->vies = 'invalid';
+		$html       = $this->refresh( 'DK12345678', 'DK' );
+
+		$this->assertStringContainsString( 'could not be validated', $html );
 	}
 
 	public function test_mismatch_and_invalid_show_the_error() {

@@ -13,12 +13,14 @@ defined( 'ABSPATH' ) || exit;
  * Value object.
  *
  * Status: empty (no number), ignored (billing outside the EU), domestic, country_mismatch,
- * invalid_format, valid, unverified (VIES did not answer) or invalid.
+ * invalid_format, valid, unverified (VIES did not answer) or invalid. A domestic decision has
+ * confirmed set when VIES said the number is valid.
  */
 class VatDecision {
 
 	public bool $exempt               = false;
 	public bool $blocks_checkout      = false;
+	public bool $confirmed            = false;
 	public string $status             = '';
 	public string $vat_number         = '';
 	public string $country            = '';
@@ -43,6 +45,10 @@ class VatDecision {
 	 * Whether VIES was actually asked (and a date is worth recording).
 	 */
 	public function consulted(): bool {
+		if ( 'domestic' === $this->status ) {
+			return $this->confirmed;
+		}
+
 		return in_array( $this->status, array( 'valid', 'invalid', 'unverified' ), true ) && 'not checked in this context' !== $this->error;
 	}
 }

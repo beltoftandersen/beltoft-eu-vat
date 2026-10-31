@@ -63,7 +63,7 @@ final class SettingsPage {
 			),
 			array(
 				'title'    => __( 'Seller country', 'beltoft-eu-vat' ),
-				'desc'     => __( 'Numbers from this country are domestic sales: VAT is charged and VIES is not asked.', 'beltoft-eu-vat' ),
+				'desc'     => __( 'Numbers from this country are domestic sales: VAT is charged and the number is never exempt.', 'beltoft-eu-vat' ),
 				'id'       => Settings::SELLER_COUNTRY,
 				'type'     => 'select',
 				'class'    => 'wc-enhanced-select',
@@ -71,6 +71,14 @@ final class SettingsPage {
 				'default'  => '',
 				'options'  => $countries,
 				'desc_tip' => true,
+			),
+			array(
+				'title'    => __( 'Domestic numbers', 'beltoft-eu-vat' ),
+				'desc'     => __( 'Check domestic VAT numbers with VIES', 'beltoft-eu-vat' ),
+				'id'       => Settings::CHECK_DOMESTIC,
+				'type'     => 'checkbox',
+				'default'  => 'yes',
+				'desc_tip' => __( 'A mistyped number of your own country is refused at checkout. An unreachable service never blocks a domestic number.', 'beltoft-eu-vat' ),
 			),
 			array(
 				'title'    => __( 'Your own VAT number', 'beltoft-eu-vat' ),
