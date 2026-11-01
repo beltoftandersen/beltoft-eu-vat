@@ -63,6 +63,13 @@ final class Exemption {
 	}
 
 	/**
+	 * Whether this plugin switched the session's exempt flag on.
+	 */
+	public static function set_by_us(): bool {
+		return function_exists( 'WC' ) && WC()->session && (bool) WC()->session->get( self::SESSION, false );
+	}
+
+	/**
 	 * Whether the current cart is reverse charged.
 	 */
 	public static function is_exempt(): bool {
@@ -85,13 +92,18 @@ final class Exemption {
 
 	/**
 	 * The number the totals are worked out with: the checkout submission, the checkout refresh,
-	 * else the account's. A field posted empty is the answer, not a gap to fill from the account.
+	 * else the account's (not in a checkout request). A field posted empty is the answer, not a gap to fill from the account.
 	 */
 	public static function number(): string {
 		$posted = Checkout::posted();
 
 		if ( null !== $posted ) {
 			return $posted['number'];
+		}
+
+		// A checkout request without the field has no evidence to attach to the order.
+		if ( Checkout::in_checkout_request() ) {
+			return '';
 		}
 
 		return function_exists( 'WC' ) && WC()->customer && WC()->customer->get_id() ? Evidence::stored_number( (int) WC()->customer->get_id() ) : '';

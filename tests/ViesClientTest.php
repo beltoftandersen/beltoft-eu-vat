@@ -47,16 +47,63 @@ class ViesClientTest extends TestCase {
 		$this->assertEqualsWithDelta( time() + DAY_IN_SECONDS, $timeout, 10 );
 	}
 
-	public function test_invalid_and_unreachable_answers_are_never_cached() {
+	public function test_an_invalid_answer_is_cached_for_ten_minutes() {
 		$this->vies = 'invalid';
 		ViesClient::check( 'DE', '000000000' );
-		ViesClient::check( 'DE', '000000000' );
-		$this->assertSame( 2, $this->requests );
+		$second = ViesClient::check( 'DE', '000000000' );
 
+		$this->assertSame( 1, $this->requests );
+		$this->assertSame( 'invalid', $second->status );
+
+		$timeout = (int) get_option( '_transient_timeout_' . ViesClient::cache_key( 'DE', '000000000' ) );
+		$this->assertEqualsWithDelta( time() + 600, $timeout, 10 );
+	}
+
+	public function test_an_unreachable_answer_is_cached_for_a_minute_and_stays_unreachable() {
 		$this->vies = 'unreachable';
 		ViesClient::check( 'DE', '111111111' );
-		ViesClient::check( 'DE', '111111111' );
-		$this->assertSame( 4, $this->requests );
+		$second = ViesClient::check( 'DE', '111111111' );
+
+		$this->assertSame( 1, $this->requests );
+		$this->assertSame( 'unreachable', $second->status );
+		$this->assertNotEmpty( $second->error );
+
+		$timeout = (int) get_option( '_transient_timeout_' . ViesClient::cache_key( 'DE', '111111111' ) );
+		$this->assertEqualsWithDelta( time() + 60, $timeout, 10 );
+	}
+
+	public function test_cache_times_are_filterable() {
+		add_filter( 'beltoft_eu_vat_invalid_cache_ttl', static fn() => 5 );
+		$this->vies = 'invalid';
+		ViesClient::check( 'DE', '000000000' );
+		remove_all_filters( 'beltoft_eu_vat_invalid_cache_ttl' );
+
+		$timeout = (int) get_option( '_transient_timeout_' . ViesClient::cache_key( 'DE', '000000000' ) );
+		$this->assertEqualsWithDelta( time() + 5, $timeout, 10 );
+	}
+
+	public function test_a_200_reply_with_an_outage_code_is_unreachable_not_invalid() {
+		$this->vies = 'ms_unavailable';
+		$result     = ViesClient::check( 'DE', '123456789' );
+
+		$this->assertSame( 'unreachable', $result->status );
+		$this->assertSame( 'MS_UNAVAILABLE', $result->error );
+	}
+
+	public function test_user_error_invalid_is_invalid_and_valid_is_valid() {
+		$this->vies = 'user_invalid';
+		$this->assertSame( 'invalid', ViesClient::check( 'DE', '000000000' )->status );
+
+		$this->vies = 'user_valid';
+		$this->assertSame( 'valid', ViesClient::check( 'DE', '123456789' )->status );
+	}
+
+	public function test_an_over_long_number_is_refused_without_calling_vies() {
+		$this->vies = 'valid';
+		$result     = ViesClient::check( 'DE', str_repeat( '1', 21 ) );
+
+		$this->assertSame( 'invalid', $result->status );
+		$this->assertSame( 0, $this->requests );
 	}
 
 	public function test_a_cached_answer_keeps_its_own_time() {

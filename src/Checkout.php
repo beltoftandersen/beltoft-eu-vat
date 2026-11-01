@@ -26,6 +26,13 @@ final class Checkout {
 	private static ?array $review = null;
 
 	/**
+	 * Whether this request is a checkout refresh or submission (set by their hooks).
+	 *
+	 * @var bool
+	 */
+	private static bool $in_checkout = false;
+
+	/**
 	 * Hooks.
 	 */
 	public static function register(): void {
@@ -50,6 +57,14 @@ final class Checkout {
 		// phpcs:enable
 
 		return self::$review;
+	}
+
+	/**
+	 * Whether this request is a checkout refresh or submission. There the field is the only
+	 * source of the number: an absent field never falls back to the account's number.
+	 */
+	public static function in_checkout_request(): bool {
+		return self::$in_checkout;
 	}
 
 	/**
@@ -83,10 +98,14 @@ final class Checkout {
 			return;
 		}
 
+		self::$in_checkout = true;
+
 		$fields = array();
 		parse_str( $post_data, $fields );
 
 		if ( ! array_key_exists( Field::KEY, $fields ) ) {
+			Exemption::apply();
+
 			return;
 		}
 
@@ -122,6 +141,8 @@ final class Checkout {
 	 * The submission, before totals: asks VIES and sets the exemption.
 	 */
 	public static function on_process(): void {
+		self::$in_checkout = true;
+
 		$posted = self::posted();
 
 		if ( null === $posted ) {
@@ -203,6 +224,7 @@ final class Checkout {
 	 * Forgets the refresh data. Used by tests.
 	 */
 	public static function reset(): void {
-		self::$review = null;
+		self::$review      = null;
+		self::$in_checkout = false;
 	}
 }

@@ -69,4 +69,40 @@ class OrderEvidenceTest extends TestCase {
 
 		$this->assertSame( '', $order->get_meta( '_beltoft_eu_vat_status' ) );
 	}
+
+	public function test_an_exempt_order_always_carries_the_number_and_evidence() {
+		$this->vies = 'valid';
+		Decisions::get( 'DE123456789', 'DE', true );
+		WC()->session->set( 'beltoft_eu_vat_exempt', true );
+		$order = $this->order();
+		$order->update_meta_data( 'is_vat_exempt', 'yes' );
+
+		OrderEvidence::attach( $order, array( 'billing_eu_vat_number' => 'DE123456789', 'billing_country' => 'DE' ) );
+
+		$this->assertSame( 'DE123456789', $order->get_meta( '_billing_eu_vat_number' ) );
+		$this->assertSame( 'valid', $order->get_meta( '_beltoft_eu_vat_status' ) );
+		$this->assertSame( 'WAPI-TEST-1', $order->get_meta( '_beltoft_eu_vat_request_id' ) );
+		WC()->session->set( 'beltoft_eu_vat_exempt', false );
+	}
+
+	public function test_an_exempt_order_without_a_number_is_refused() {
+		WC()->session->set( 'beltoft_eu_vat_exempt', true );
+		$order = $this->order();
+		$order->update_meta_data( 'is_vat_exempt', 'yes' );
+
+		try {
+			OrderEvidence::attach( $order, array( 'billing_country' => 'DE' ) );
+			$this->fail( 'expected an exception' );
+		} catch ( \Exception $e ) {
+			$this->assertStringContainsString( 'VAT number is missing', $e->getMessage() );
+		} finally {
+			WC()->session->set( 'beltoft_eu_vat_exempt', false );
+		}
+	}
+
+	public function test_a_non_exempt_order_without_a_number_is_untouched() {
+		$order = $this->order();
+		OrderEvidence::attach( $order, array( 'billing_country' => 'DE' ) );
+		$this->assertSame( '', $order->get_meta( '_beltoft_eu_vat_status' ) );
+	}
 }
