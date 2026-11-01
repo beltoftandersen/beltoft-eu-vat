@@ -115,4 +115,30 @@ class ExemptionTest extends TestCase {
 		$this->assertTrue( WC()->customer->get_is_vat_exempt() );
 		$this->assertSame( 1, $this->requests );
 	}
+
+	public function test_a_checkout_refresh_without_the_field_never_uses_the_account_number() {
+		$user = self::factory()->user->create();
+		update_user_meta( $user, 'billing_eu_vat_number', 'DE123456789' );
+		$this->cache_valid( 'DE', '123456789' );
+		WC()->customer = new \WC_Customer( $user );
+		WC()->customer->set_billing_country( 'DE' );
+
+		do_action( 'woocommerce_checkout_update_order_review', 'billing_country=DE' );
+
+		$this->assertFalse( Exemption::is_exempt() );
+		$this->assertFalse( WC()->customer->get_is_vat_exempt() );
+	}
+
+	public function test_a_checkout_submission_without_the_field_never_uses_the_account_number() {
+		$user = self::factory()->user->create();
+		update_user_meta( $user, 'billing_eu_vat_number', 'DE123456789' );
+		$this->cache_valid( 'DE', '123456789' );
+		WC()->customer = new \WC_Customer( $user );
+		WC()->customer->set_billing_country( 'DE' );
+		$_POST['billing_country'] = 'DE';
+
+		do_action( 'woocommerce_checkout_process' );
+
+		$this->assertFalse( Exemption::is_exempt() );
+	}
 }

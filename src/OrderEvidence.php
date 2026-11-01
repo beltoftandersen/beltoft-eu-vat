@@ -45,10 +45,30 @@ final class OrderEvidence {
 		$number = Settings::normalise( (string) ( $data[ Field::KEY ] ?? '' ) );
 
 		if ( '' === $number ) {
+			if ( self::is_exempt( $order ) ) {
+				// Fail closed: never keep an exempt order that has no number or evidence.
+				throw new \Exception( esc_html__( 'The VAT number is missing, so VAT cannot be removed. Please enter your VAT number and try again.', 'beltoft-eu-vat' ) );
+			}
+
 			return;
 		}
 
-		self::write( $order, Decisions::get( $number, (string) ( $data['billing_country'] ?? '' ), false ) );
+		$decision = Decisions::get( $number, (string) ( $data['billing_country'] ?? '' ), false );
+
+		if ( self::is_exempt( $order ) ) {
+			$order->update_meta_data( '_' . Field::KEY, $number );
+		}
+
+		self::write( $order, $decision );
+	}
+
+	/**
+	 * Whether the order is created VAT exempt by this plugin (an exemption other code set is not ours to police).
+	 *
+	 * @param \WC_Order $order Order.
+	 */
+	private static function is_exempt( \WC_Order $order ): bool {
+		return 'yes' === $order->get_meta( 'is_vat_exempt' ) && Exemption::set_by_us();
 	}
 
 	/**

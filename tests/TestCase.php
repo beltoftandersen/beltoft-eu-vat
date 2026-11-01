@@ -80,6 +80,21 @@ abstract class TestCase extends \WP_UnitTestCase {
 					),
 					'response' => array( 'code' => 200, 'message' => 'OK' ),
 				);
+			case 'ms_unavailable':
+			case 'user_invalid':
+			case 'user_valid':
+				return array(
+					'headers'  => array(),
+					'body'     => wp_json_encode(
+						array(
+							'valid'             => 'user_valid' === $this->vies,
+							'userError'         => array( 'ms_unavailable' => 'MS_UNAVAILABLE', 'user_invalid' => 'INVALID', 'user_valid' => 'VALID' )[ $this->vies ],
+							'requestIdentifier' => 'WAPI-TEST-1',
+							'name'              => 'ACME GmbH',
+						)
+					),
+					'response' => array( 'code' => 200, 'message' => 'OK' ),
+				);
 			case 'shape':
 				return array( 'headers' => array(), 'body' => '{"other":1}', 'response' => array( 'code' => 200, 'message' => 'OK' ) );
 			case 'error503':
