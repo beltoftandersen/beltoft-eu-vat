@@ -4,7 +4,7 @@ Tags: woocommerce, vat, eu vat, vies, reverse charge
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -45,6 +45,11 @@ User meta and order meta `billing_eu_vat_number` (order meta with a leading unde
 Yes, with the `beltoft_eu_vat_local_check` filter. It receives null, the country, the number without prefix and the number as typed, and returns true, false or null. Portugal's NIF check digit is built in as an example. Other filters: `beltoft_eu_vat_seller_country`, `beltoft_eu_vat_own_number`, `beltoft_eu_vat_label`, `beltoft_eu_vat_admin_email`, `beltoft_eu_vat_destination`, `beltoft_eu_vat_cache_ttl`, `beltoft_eu_vat_toggle_field`, `beltoft_eu_vat_address_label`, `beltoft_eu_vat_reverse_charge_text`.
 
 == Changelog ==
+
+= 0.2.1 =
+* A VIES outage answer (userError such as MS_UNAVAILABLE) counts as unreachable, not invalid.
+* Invalid answers are remembered for 10 minutes and unreachable ones for 60 seconds; over-long numbers are refused without asking VIES. Filters `beltoft_eu_vat_invalid_cache_ttl`, `beltoft_eu_vat_unreachable_cache_ttl`, `beltoft_eu_vat_max_number_length`.
+* A checkout without the VAT field never falls back to the account's number, and an exempt order without a number is refused.
 
 = 0.2.0 =
 * Domestic VAT numbers are checked with VIES too (setting "Check domestic VAT numbers with VIES", on by default). Invalid blocks the checkout; unreachable proceeds.
