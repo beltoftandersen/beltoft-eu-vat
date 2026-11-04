@@ -36,7 +36,7 @@ class JavaScriptTest extends TestCase {
 		$this->assertStringNotContainsString( 'updated_checkout', $code );
 
 		// The only load-time work: the display toggle and a check of a number already in the field.
-		$this->assertMatchesRegularExpression( "#toggleWrapper\(\);\s*if \( normalised\(\) && applies\(\) \) \{\s*check\( false \);\s*\}\s*\}\( jQuery \) \);\s*$#", $code );
+		$this->assertMatchesRegularExpression( "#toggleWrapper\(\);\s*if \( 'checkout' === data\.context && normalised\(\) && applies\(\) \) \{\s*check\( false \);\s*\}\s*\}\( jQuery \) \);\s*$#", $code );
 	}
 
 	public function test_the_status_line_is_written_as_text_and_is_live() {

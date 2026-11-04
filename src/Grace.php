@@ -10,11 +10,12 @@ namespace BeltoftEuVat;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The 72 hour cache is too short to bridge a long VIES outage. Every valid answer is therefore
- * also kept for the grace period (default 30 days). While VIES does not answer, a number whose
- * country and digits match a confirmation inside that period is accepted. The sources are, in
- * order: that record, the evidence stored on the logged-in customer's account, and the evidence
- * stored on any account holding the same number. An invalid answer drops the record.
+ * The 72 hour cache is too short to bridge a long VIES outage. A valid answer is therefore
+ * also kept for the grace period (default 30 days), per customer: under the logged-in user, or
+ * under the checkout session of a guest. While VIES does not answer, a number whose country and
+ * digits match a confirmation inside that period is accepted. The sources are that record and
+ * the evidence stored on the logged-in customer's own account. A confirmation made for another
+ * customer is never used. An invalid answer drops the record.
  */
 final class Grace {
 
@@ -30,7 +31,7 @@ final class Grace {
 	public static function remember( string $country, string $number, ViesResult $result ): void {
 		$days = Settings::grace_days();
 
-		if ( $days < 1 || ! $result->is_valid() ) {
+		if ( $days < 1 || ! $result->is_valid() || '' === self::who() ) {
 			return;
 		}
 
@@ -69,7 +70,7 @@ final class Grace {
 		}
 
 		$since  = time() - $days * DAY_IN_SECONDS;
-		$record = get_transient( self::key( $country, $number ) );
+		$record = '' !== self::who() ? get_transient( self::key( $country, $number ) ) : false;
 
 		if ( is_array( $record ) && (int) ( $record['checked_at'] ?? 0 ) >= $since ) {
 			return new ViesResult(
@@ -95,7 +96,7 @@ final class Grace {
 	}
 
 	/**
-	 * The accounts that may hold this number: the current customer first, then any other.
+	 * The logged-in customer, when the number stored on the account is this one.
 	 *
 	 * @param string $full    Country code and number.
 	 * @param string $country VIES code.
@@ -103,7 +104,6 @@ final class Grace {
 	 * @return int[]
 	 */
 	private static function user_ids( string $full, string $country, string $number ): array {
-		$ids      = array();
 		$variants = array( $full );
 
 		if ( 'EL' === strtoupper( $country ) ) {
@@ -111,20 +111,27 @@ final class Grace {
 		}
 
 		if ( is_user_logged_in() && in_array( Settings::normalise( Evidence::stored_number( get_current_user_id() ) ), $variants, true ) ) {
-			$ids[] = get_current_user_id();
+			return array( get_current_user_id() );
 		}
 
-		$others = get_users(
-			array(
-				'meta_key'   => Field::KEY, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Only runs while VIES is down.
-				'meta_value' => $variants, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
-				'compare'    => 'IN',
-				'number'     => 10,
-				'fields'     => 'ID',
-			)
-		);
+		return array();
+	}
 
-		return array_values( array_unique( array_merge( $ids, array_map( 'intval', $others ) ) ) );
+	/**
+	 * Who the confirmation belongs to: the logged-in user, else the guest's checkout session.
+	 */
+	private static function who(): string {
+		if ( is_user_logged_in() ) {
+			return 'u' . get_current_user_id();
+		}
+
+		if ( function_exists( 'WC' ) && WC()->session ) {
+			$id = (string) WC()->session->get_customer_id();
+
+			return '' !== $id ? 's' . $id : '';
+		}
+
+		return '';
 	}
 
 	/**
@@ -157,6 +164,6 @@ final class Grace {
 	 * @param string $number  Number without prefix.
 	 */
 	private static function key( string $country, string $number ): string {
-		return self::PREFIX . strtoupper( $country ) . '_' . strtoupper( Settings::normalise( $number ) );
+		return self::PREFIX . md5( self::who() ) . '_' . strtoupper( $country ) . '_' . strtoupper( Settings::normalise( $number ) );
 	}
 }

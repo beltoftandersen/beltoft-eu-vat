@@ -5,7 +5,8 @@
  * or 600 ms after the typing stops. The answer is written into an inline status line. On the
  * checkout the script then asks for exactly one update_checkout, so the order summary reads the
  * answer from the cache. The checkout refresh itself never calls VIES. It never asks on page
- * load, except to check a number that is already in the field.
+ * load, except to check a number that is already in the field on the checkout. In My Account the
+ * stored status shows until the customer changes the number; a fresh result replaces it.
  */
 ( function ( $ ) {
 	'use strict';
@@ -166,7 +167,7 @@
 
 	toggleWrapper();
 
-	if ( normalised() && applies() ) {
+	if ( 'checkout' === data.context && normalised() && applies() ) {
 		check( false );
 	}
 }( jQuery ) );

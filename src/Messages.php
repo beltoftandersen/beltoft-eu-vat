@@ -142,7 +142,7 @@ final class Messages {
 
 				return array( __( 'Confirmed. No VAT is charged (reverse charge).', 'beltoft-eu-vat' ), 'valid', false );
 			case 'invalid':
-				return array( __( 'This VAT number was not found. Check it, or continue and VAT is charged.', 'beltoft-eu-vat' ), 'notfound', false );
+				return array( __( 'This VAT number was not found in the EU register. Check it, or remove it to continue with VAT charged.', 'beltoft-eu-vat' ), 'notfound', false );
 			case 'unverified':
 				if ( Settings::BLOCK === Settings::on_unreachable() ) {
 					return array( self::error( $decision ), 'unreachable', true );

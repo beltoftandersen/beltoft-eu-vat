@@ -10,7 +10,8 @@
 .beltoft-eu-vat-stored:empty {
 	display: none;
 }
-.beltoft-eu-vat-status:not(:empty) ~ .beltoft-eu-vat-message {
+.beltoft-eu-vat-status:not(:empty) ~ .beltoft-eu-vat-message,
+.beltoft-eu-vat-status:not(:empty) ~ .beltoft-eu-vat-stored {
 	display: none;
 }
 .beltoft-eu-vat-message.is-error,

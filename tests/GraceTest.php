@@ -11,12 +11,21 @@ use BeltoftEuVat\ViesResult;
 
 class GraceTest extends TestCase {
 
+	private int $customer = 0;
+
+	public function set_up(): void {
+		parent::set_up();
+		$this->customer = self::factory()->user->create();
+		wp_set_current_user( $this->customer );
+	}
+
 	public function tear_down(): void {
 		remove_all_filters( 'beltoft_eu_vat_grace_days' );
 		parent::tear_down();
 	}
 
 	private function confirmed_days_ago( int $days ): void {
+		wp_set_current_user( $this->customer );
 		Grace::remember( 'DE', '123456789', new ViesResult( 'valid', 'WAPI-OLD-9', 'ACME GmbH', '', time() - $days * DAY_IN_SECONDS ) );
 	}
 
@@ -105,7 +114,7 @@ class GraceTest extends TestCase {
 		Validator::decide( 'DE123456789', 'DE' );
 
 		$this->assertNotNull( Grace::find( 'DE', '123456789' ) );
-		$timeout = (int) get_option( '_transient_timeout_beltoft_eu_vat_last_valid_DE_123456789' );
+		$timeout = (int) $GLOBALS['wpdb']->get_var( "SELECT option_value FROM {$GLOBALS['wpdb']->options} WHERE option_name LIKE '_transient_timeout_beltoft_eu_vat_last_valid_%'" );
 		$this->assertEqualsWithDelta( time() + 30 * DAY_IN_SECONDS, $timeout, 10 );
 	}
 
@@ -119,7 +128,7 @@ class GraceTest extends TestCase {
 	}
 
 	public function test_the_stored_account_evidence_counts_too() {
-		$user = self::factory()->user->create();
+		$user = $this->customer;
 		update_user_meta( $user, 'billing_eu_vat_number', 'DE123456789' );
 		update_user_meta( $user, Evidence::STATUS, 'valid' );
 		update_user_meta( $user, Evidence::REQUEST_ID, 'WAPI-USER-3' );
@@ -132,7 +141,7 @@ class GraceTest extends TestCase {
 	}
 
 	public function test_evidence_of_another_number_or_a_flagged_account_is_not_used() {
-		$user = self::factory()->user->create();
+		$user = $this->customer;
 		update_user_meta( $user, 'billing_eu_vat_number', 'DE999999999' );
 		update_user_meta( $user, Evidence::STATUS, 'valid' );
 		update_user_meta( $user, Evidence::CHECKED_AT, gmdate( 'c', time() - DAY_IN_SECONDS ) );
@@ -143,6 +152,50 @@ class GraceTest extends TestCase {
 		Decisions::reset();
 		delete_transient( \BeltoftEuVat\ViesClient::cache_key( 'DE', '123456789' ) );
 		$this->assertSame( 'unverified', Validator::decide( 'DE123456789', 'DE' )->status );
+	}
+
+	public function test_another_customers_account_evidence_is_never_used() {
+		$other = self::factory()->user->create();
+		update_user_meta( $other, 'billing_eu_vat_number', 'DE123456789' );
+		update_user_meta( $other, Evidence::STATUS, 'valid' );
+		update_user_meta( $other, Evidence::CHECKED_AT, gmdate( 'c', time() - DAY_IN_SECONDS ) );
+
+		$this->assertSame( 'unverified', Validator::decide( 'DE123456789', 'DE' )->status );
+		wp_set_current_user( 0 );
+		Decisions::reset();
+		$this->assertSame( 'unverified', Validator::decide( 'DE123456789', 'DE' )->status );
+	}
+
+	public function test_a_confirmation_made_for_another_customer_is_not_used() {
+		$this->confirmed_days_ago( 2 );
+		$this->assertTrue( Validator::decide( 'DE123456789', 'DE' )->grace );
+
+		wp_set_current_user( self::factory()->user->create() );
+		Decisions::reset();
+		$this->assertSame( 'unverified', Validator::decide( 'DE123456789', 'DE' )->status );
+	}
+
+	public function test_a_guest_gets_grace_only_from_a_confirmation_in_the_same_session() {
+		wp_set_current_user( 0 );
+		WC()->session->set_customer_session_cookie( false );
+		$mine = (string) WC()->session->get_customer_id();
+		$this->assertNotSame( '', $mine );
+
+		$this->vies = 'valid';
+		Validator::decide( 'DE123456789', 'DE' );
+		$this->assertNotNull( Grace::find( 'DE', '123456789' ), 'own inline check' );
+
+		$this->vies = 'unreachable';
+		delete_transient( \BeltoftEuVat\ViesClient::cache_key( 'DE', '123456789' ) );
+		Decisions::reset();
+		$this->assertTrue( Validator::decide( 'DE123456789', 'DE' )->grace );
+
+		WC()->session->set_customer_session_cookie( false );
+		WC()->session->init_session_cookie();
+		\Closure::bind( function () { $this->_customer_id = 't_other'; }, WC()->session, get_class( WC()->session ) )();
+		Decisions::reset();
+		delete_transient( \BeltoftEuVat\ViesClient::cache_key( 'DE', '123456789' ) );
+		$this->assertSame( 'unverified', Validator::decide( 'DE123456789', 'DE' )->status, 'another session' );
 	}
 
 	public function test_a_pending_lookup_is_not_a_grace_case() {

@@ -63,7 +63,7 @@ class InlineTest extends TestCase {
 		$reply      = $this->ask();
 
 		$this->assertSame( 'notfound', $reply['body']['state'] );
-		$this->assertSame( 'This VAT number was not found. Check it, or continue and VAT is charged.', $reply['body']['text'] );
+		$this->assertSame( 'This VAT number was not found in the EU register. Check it, or remove it to continue with VAT charged.', $reply['body']['text'] );
 		$this->assertFalse( $reply['body']['retry'] );
 	}
 
@@ -76,6 +76,7 @@ class InlineTest extends TestCase {
 	}
 
 	public function test_unreachable_with_a_recent_confirmation_uses_the_grace_wording() {
+		wp_set_current_user( self::factory()->user->create() );
 		\BeltoftEuVat\Grace::remember( 'DE', '123456789', new \BeltoftEuVat\ViesResult( 'valid', 'REF-1', 'ACME GmbH', '', time() - 5 * DAY_IN_SECONDS ) );
 		$reply = $this->ask();
 
