@@ -124,7 +124,7 @@ final class Field {
 	}
 
 	/**
-	 * The line the inline check writes into (see assets/checkout.js). Hides the refresh's own line while it has text.
+	 * The line the inline check writes into (see assets/checkout.js). Hides the refresh's own line while it has text (see assets/checkout.css).
 	 */
 	public static function status_html(): string {
 		return '<span class="beltoft-eu-vat-status" role="status" aria-live="polite"></span>';
