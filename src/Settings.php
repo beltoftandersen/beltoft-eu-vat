@@ -20,6 +20,7 @@ final class Settings {
 	public const ON_UNREACHABLE = 'beltoft_eu_vat_on_unreachable';
 	public const ADMIN_EMAIL    = 'beltoft_eu_vat_admin_email';
 	public const CHECK_DOMESTIC = 'beltoft_eu_vat_check_domestic';
+	public const GRACE_DAYS     = 'beltoft_eu_vat_grace_days';
 
 	public const FLAG  = 'flag';
 	public const BLOCK = 'block';
@@ -95,6 +96,18 @@ final class Settings {
 	 */
 	public static function check_domestic(): bool {
 		return 'no' !== get_option( self::CHECK_DOMESTIC, 'yes' );
+	}
+
+	/**
+	 * How many days an earlier valid confirmation is accepted while VIES does not answer. 0 is off.
+	 */
+	public static function grace_days(): int {
+		/**
+		 * Filters the grace period in days. 0 turns the grace off.
+		 *
+		 * @param int $days Days, default the setting (30).
+		 */
+		return max( 0, (int) apply_filters( 'beltoft_eu_vat_grace_days', (int) get_option( self::GRACE_DAYS, 30 ) ) );
 	}
 
 	/**

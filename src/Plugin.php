@@ -41,6 +41,8 @@ final class Plugin {
 		SettingsPage::register();
 		Field::register();
 		Checkout::register();
+		Inline::register();
+		Recheck::register();
 		Exemption::register();
 		OrderEvidence::register();
 		Account::register();

@@ -22,6 +22,7 @@ final class OrderEvidence {
 	public const CHECKED_AT = '_beltoft_eu_vat_checked_at';
 	public const COUNTRY    = '_beltoft_eu_vat_country';
 	public const REVIEW     = '_beltoft_eu_vat_review';
+	public const GRACE      = '_beltoft_eu_vat_grace';
 
 	/**
 	 * Hooks.
@@ -54,6 +55,12 @@ final class OrderEvidence {
 		}
 
 		$decision = Decisions::get( $number, (string) ( $data['billing_country'] ?? '' ), false );
+
+		if ( 'pending' === $decision->status ) {
+			// Nothing was cached and VIES was not asked: record it as unverified, so that it is reviewed.
+			$decision->status = 'unverified';
+			$decision->error  = __( 'no answer was available when the order was placed', 'beltoft-eu-vat' );
+		}
 
 		if ( self::is_exempt( $order ) ) {
 			$order->update_meta_data( '_' . Field::KEY, $number );
@@ -89,6 +96,17 @@ final class OrderEvidence {
 		$order->update_meta_data( self::REQUEST_ID, $consulted ? $decision->request_identifier : '' );
 		$order->update_meta_data( self::NAME, $consulted ? $decision->registered_name : '' );
 		$order->update_meta_data( self::CHECKED_AT, $consulted && $decision->checked_at ? gmdate( 'c', $decision->checked_at ) : '' );
+
+		if ( $decision->grace ) {
+			$order->update_meta_data( self::GRACE, 'yes' );
+			$order->add_order_note(
+				sprintf(
+					/* translators: %s: date of the VIES confirmation that was used, for example 4 Nov 2026 */
+					__( 'Accepted on the confirmation of %s (VIES unreachable).', 'beltoft-eu-vat' ),
+					Messages::date( $decision->checked_at )
+				)
+			);
+		}
 
 		if ( 'unverified' === $decision->status ) {
 			$order->update_meta_data( self::REVIEW, 'yes' );

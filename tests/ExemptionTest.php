@@ -108,12 +108,12 @@ class ExemptionTest extends TestCase {
 	}
 
 	public function test_the_checkout_refresh_applies_the_exemption_before_totals() {
-		$this->vies = 'valid';
+		$this->cache_valid( 'DE', '123456789' );
 
 		do_action( 'woocommerce_checkout_update_order_review', 'billing_eu_vat_number=DE123456789&billing_country=DE' );
 
 		$this->assertTrue( WC()->customer->get_is_vat_exempt() );
-		$this->assertSame( 1, $this->requests );
+		$this->assertSame( 0, $this->requests );
 	}
 
 	public function test_a_checkout_refresh_without_the_field_never_uses_the_account_number() {

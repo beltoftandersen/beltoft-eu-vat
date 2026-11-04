@@ -1,14 +1,36 @@
-.beltoft-eu-vat-message {
+.beltoft-eu-vat-message,
+.beltoft-eu-vat-status,
+.beltoft-eu-vat-stored {
 	display: block;
 	margin-top: 0.4em;
 	font-size: 0.9em;
 }
-.beltoft-eu-vat-message:empty {
+.beltoft-eu-vat-message:empty,
+.beltoft-eu-vat-status:empty,
+.beltoft-eu-vat-stored:empty {
 	display: none;
 }
-.beltoft-eu-vat-message.is-error {
+.beltoft-eu-vat-status:not(:empty) ~ .beltoft-eu-vat-message,
+.beltoft-eu-vat-status:not(:empty) ~ .beltoft-eu-vat-stored {
+	display: none;
+}
+.beltoft-eu-vat-message.is-error,
+.beltoft-eu-vat-status.is-error,
+.beltoft-eu-vat-status.is-notfound {
 	color: #b32d2e;
 }
-.beltoft-eu-vat-message.is-valid {
+.beltoft-eu-vat-message.is-valid,
+.beltoft-eu-vat-status.is-valid {
 	color: #1e7b34;
+}
+.beltoft-eu-vat-status.is-unreachable {
+	color: #8a5a00;
+}
+.beltoft-eu-vat-status.is-checking,
+.beltoft-eu-vat-stored {
+	color: #50575e;
+}
+.beltoft-eu-vat-again {
+	margin-left: 0.25em;
+	text-decoration: underline;
 }

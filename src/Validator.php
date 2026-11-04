@@ -49,9 +49,10 @@ class Validator {
 	 *
 	 * @param string $vat_number      As typed.
 	 * @param string $billing_country Billing country.
-	 * @param bool   $allow_remote    False answers from the cache only.
+	 * @param bool   $allow_remote    False answers from the cache only: with nothing cached the status is pending.
+	 * @param bool   $fresh           True ignores the cache and the grace and asks VIES (the nightly re-check).
 	 */
-	public static function decide( string $vat_number, string $billing_country, bool $allow_remote = true ): VatDecision {
+	public static function decide( string $vat_number, string $billing_country, bool $allow_remote = true, bool $fresh = false ): VatDecision {
 		$raw      = Settings::normalise( $vat_number );
 		$decision = new VatDecision( '', $raw );
 
@@ -85,7 +86,7 @@ class Validator {
 			}
 
 			if ( Settings::check_domestic() ) {
-				self::check_domestic( $decision, $country, $number, $allow_remote );
+				self::check_domestic( $decision, $country, $number, $allow_remote, $fresh );
 			}
 
 			return $decision;
@@ -105,7 +106,22 @@ class Validator {
 			return $decision;
 		}
 
-		$result = ViesClient::check( self::vies_code( $country ), $number, $allow_remote );
+		$result = ViesClient::check( self::vies_code( $country ), $number, $allow_remote, $fresh );
+
+		if ( $result->is_pending() ) {
+			$decision->status = 'pending';
+
+			return $decision;
+		}
+
+		if ( $result->is_unreachable() && ! $fresh ) {
+			$earlier = Grace::find( self::vies_code( $country ), $number );
+
+			if ( null !== $earlier ) {
+				$decision->grace = true;
+				$result          = $earlier;
+			}
+		}
 
 		$decision->request_identifier = $result->request_identifier;
 		$decision->registered_name    = $result->registered_name;
@@ -140,9 +156,10 @@ class Validator {
 	 * @param string      $country  The number's country.
 	 * @param string      $number   Number without prefix.
 	 * @param bool        $allow_remote False answers from the cache only.
+	 * @param bool        $fresh        Ignore the cache.
 	 */
-	private static function check_domestic( VatDecision $decision, string $country, string $number, bool $allow_remote ): void {
-		$result = ViesClient::check( self::vies_code( $country ), $number, $allow_remote );
+	private static function check_domestic( VatDecision $decision, string $country, string $number, bool $allow_remote, bool $fresh ): void {
+		$result = ViesClient::check( self::vies_code( $country ), $number, $allow_remote, $fresh );
 
 		if ( $result->is_unreachable() ) {
 			return;
@@ -160,6 +177,20 @@ class Validator {
 
 		$decision->status          = 'invalid';
 		$decision->blocks_checkout = true;
+	}
+
+	/**
+	 * The member state code and the bare number VIES is asked about, for a typed number.
+	 *
+	 * @param string $vat_number      As typed.
+	 * @param string $billing_country Billing country.
+	 * @return array{0:string,1:string}
+	 */
+	public static function vies_parts( string $vat_number, string $billing_country ): array {
+		$raw     = Settings::normalise( $vat_number );
+		$country = self::country_of( $raw, $billing_country );
+
+		return array( self::vies_code( $country ), self::number_of( $raw, $country ) );
 	}
 
 	/**

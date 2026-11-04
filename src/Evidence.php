@@ -21,6 +21,15 @@ final class Evidence {
 	public const NAME       = '_beltoft_eu_vat_name';
 	public const CHECKED_AT = '_beltoft_eu_vat_checked_at';
 
+	/** Set by the nightly re-check when a number that was valid is now invalid. */
+	public const FLAG = '_beltoft_eu_vat_flag';
+
+	/** When the nightly re-check last got a definite answer. */
+	public const RECHECKED_AT = '_beltoft_eu_vat_rechecked_at';
+
+	/** The number the admin was already mailed about. */
+	public const MAILED = '_beltoft_eu_vat_invalid_mailed';
+
 	/** User meta the previous plugin kept the number in. */
 	public const LEGACY_USER_META = '_wc_other/alg_eu_vat/billing_eu_vat_number';
 

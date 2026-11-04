@@ -32,7 +32,9 @@ abstract class TestCase extends \WP_UnitTestCase {
 		update_option( Settings::SELLER_COUNTRY, 'DK' );
 		update_option( Settings::ADMIN_EMAIL, 'christian.beltoft@gmail.com' );
 
-		$GLOBALS['wpdb']->query( "DELETE FROM {$GLOBALS['wpdb']->options} WHERE option_name LIKE '%beltoft_eu_vat_vies_%'" );
+		$GLOBALS['wpdb']->query( "DELETE FROM {$GLOBALS['wpdb']->options} WHERE option_name LIKE '%beltoft_eu_vat_vies_%' OR option_name LIKE '%beltoft_eu_vat_last_valid_%' OR option_name LIKE '%beltoft_eu_vat_rl_%' OR option_name LIKE '%beltoft_eu_vat_recheck_queue%'" );
+		delete_option( Settings::GRACE_DAYS );
+		$_SERVER['REMOTE_ADDR'] = '203.0.113.9';
 
 		Decisions::reset();
 		Checkout::reset();

@@ -34,7 +34,7 @@ class ViesClientTest extends TestCase {
 		$this->assertSame( 'unreachable', ViesClient::check( 'DE', '2' )->status );
 	}
 
-	public function test_a_valid_answer_is_cached_for_24_hours() {
+	public function test_a_valid_answer_is_cached_for_72_hours() {
 		$this->vies = 'valid';
 		ViesClient::check( 'DE', '123456789' );
 		$second = ViesClient::check( 'DE', '123456789' );
@@ -44,7 +44,7 @@ class ViesClientTest extends TestCase {
 		$this->assertSame( 'WAPI-TEST-1', $second->request_identifier );
 
 		$timeout = (int) get_option( '_transient_timeout_' . ViesClient::cache_key( 'DE', '123456789' ) );
-		$this->assertEqualsWithDelta( time() + DAY_IN_SECONDS, $timeout, 10 );
+		$this->assertEqualsWithDelta( time() + 3 * DAY_IN_SECONDS, $timeout, 10 );
 	}
 
 	public function test_an_invalid_answer_is_cached_for_ten_minutes() {

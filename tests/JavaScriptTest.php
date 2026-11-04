@@ -17,25 +17,42 @@ class JavaScriptTest extends TestCase {
 		$this->assertSame( 1, substr_count( $this->code(), 'update_checkout' ) );
 	}
 
-	public function test_the_trigger_is_debounced_inside_the_input_handler_for_real_input_only() {
+	public function test_the_check_starts_on_blur_or_600_ms_after_real_typing() {
 		$code = $this->code();
 
-		$this->assertMatchesRegularExpression( "#on\( 'input', field, function \( event \) \{\s*if \( ! event\.originalEvent \) \{\s*return;\s*\}.*setTimeout\(.*trigger\( 'update_checkout' \).*\}, 600 \)#s", $code );
+		$this->assertMatchesRegularExpression( "#on\( 'input', field, function \( event \) \{\s*if \( ! event\.originalEvent \) \{\s*return;\s*\}.*setTimeout\(.*check\( false \).*\}, 600 \)#s", $code );
+		$this->assertMatchesRegularExpression( "#on\( 'focusout', field, function \(\) \{\s*if \( signature\(\) !== last \) \{\s*check\( false \);#s", $code );
 	}
 
-	public function test_no_load_time_trigger_and_no_own_ajax_or_blocking() {
+	public function test_the_refresh_is_asked_once_after_a_check_and_never_from_a_bare_load() {
 		$code = $this->code();
 
+		// The single trigger sits in refresh(), which only the check calls (after the answer, or when there is nothing to ask).
+		$this->assertSame( 2, substr_count( $code, 'refresh();' ) );
+		$this->assertMatchesRegularExpression( "#\.always\( function \(\) \{\s*if \( id === seq \) \{\s*xhr = null;\s*refresh\(\);#s", $code );
 		$this->assertDoesNotMatchRegularExpression( '#\$\(\s*function#', $code );
 		$this->assertStringNotContainsString( '.ready(', $code );
-		$this->assertStringNotContainsString( 'ajax', strtolower( $code ) );
 		$this->assertStringNotContainsString( 'blockUI', $code );
 		$this->assertStringNotContainsString( 'updated_checkout', $code );
 
-		// The only statements at the top level of the wrapper: declarations, two bindings and the display toggle.
-		$this->assertMatchesRegularExpression( "#toggleWrapper\(\);\s*\}\( jQuery \) \);\s*$#", $code );
-		$top = (string) preg_replace( '#\$\( document\.body \)\.on\( \'input\'.*?\}, 600 \);\s*\} \);#s', '', $code );
-		$this->assertStringNotContainsString( 'update_checkout', $top );
+		// The only load-time work: the display toggle and a check of a number already in the field.
+		$this->assertMatchesRegularExpression( "#toggleWrapper\(\);\s*if \( 'checkout' === data\.context && normalised\(\) && applies\(\) \) \{\s*check\( false \);\s*\}\s*\}\( jQuery \) \);\s*$#", $code );
+	}
+
+	public function test_the_status_line_is_written_as_text_and_is_live() {
+		$code = $this->code();
+
+		$this->assertStringContainsString( 'createTextNode', $code );
+		$this->assertStringNotContainsString( '.html(', $code );
+		$this->assertStringContainsString( 'aria-live="polite"', $code );
+		$this->assertStringContainsString( "'abort' === status", $code );
+	}
+
+	public function test_check_again_only_comes_with_retry() {
+		$code = $this->code();
+
+		$this->assertStringContainsString( 'if ( retry ) {', $code );
+		$this->assertStringContainsString( 'beltoft-eu-vat-again', $code );
 	}
 
 	public function test_css_has_no_border_radius() {
@@ -55,8 +72,14 @@ class JavaScriptTest extends TestCase {
 			}
 		}
 
+		$files[] = $root . '/readme.txt';
+
 		foreach ( $files as $file ) {
-			$this->assertStringNotContainsString( "\u{2014}", (string) file_get_contents( $file ), $file );
+			$text = (string) file_get_contents( $file );
+
+			$this->assertStringNotContainsString( "\u{2014}", $text, $file );
+			$this->assertStringNotContainsString( "\u{00B7}", $text, $file );
+			$this->assertStringNotContainsString( '&middot;', $text, $file );
 		}
 	}
 }
