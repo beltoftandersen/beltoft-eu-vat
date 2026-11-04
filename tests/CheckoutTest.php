@@ -6,6 +6,17 @@ use BeltoftEuVat\Settings;
 
 class CheckoutTest extends TestCase {
 
+	/**
+	 * Puts what the inline check would have cached in the cache, then refreshes.
+	 */
+	private function refresh_after_check( string $number, string $country ): string {
+		\BeltoftEuVat\Decisions::get( $number, $country, true );
+		\BeltoftEuVat\Decisions::reset();
+		$this->requests = 0;
+
+		return $this->refresh( $number, $country );
+	}
+
 	private function refresh( string $number, string $country ): string {
 		do_action( 'woocommerce_checkout_update_order_review', 'billing_eu_vat_number=' . rawurlencode( $number ) . '&billing_country=' . $country );
 		$fragments = apply_filters( 'woocommerce_update_order_review_fragments', array() );
@@ -22,7 +33,7 @@ class CheckoutTest extends TestCase {
 
 	public function test_valid_number_is_confirmed_under_the_field() {
 		$this->vies = 'valid';
-		$html       = $this->refresh( 'DE123456789', 'DE' );
+		$html       = $this->refresh_after_check( 'DE123456789', 'DE' );
 
 		$this->assertStringContainsString( 'VAT number confirmed. VAT is not charged (reverse charge).', $html );
 		$this->assertStringContainsString( 'class="beltoft-eu-vat-message is-valid"', $html );
@@ -37,14 +48,14 @@ class CheckoutTest extends TestCase {
 
 	public function test_a_confirmed_domestic_number_says_so() {
 		$this->vies = 'valid';
-		$html       = $this->refresh( 'DK12345678', 'DK' );
+		$html       = $this->refresh_after_check( 'DK12345678', 'DK' );
 
 		$this->assertStringContainsString( 'VAT number confirmed. Danish VAT is charged on domestic sales.', $html );
 	}
 
 	public function test_an_invalid_domestic_number_shows_the_invalid_message() {
 		$this->vies = 'invalid';
-		$html       = $this->refresh( 'DK12345678', 'DK' );
+		$html       = $this->refresh_after_check( 'DK12345678', 'DK' );
 
 		$this->assertStringContainsString( 'could not be validated', $html );
 	}
@@ -54,7 +65,7 @@ class CheckoutTest extends TestCase {
 
 		Checkout::reset();
 		$this->vies = 'invalid';
-		$this->assertStringContainsString( 'could not be validated', $this->refresh( 'DE000000000', 'DE' ) );
+		$this->assertStringContainsString( 'could not be validated', $this->refresh_after_check( 'DE000000000', 'DE' ) );
 	}
 
 	public function test_an_empty_field_clears_the_message() {

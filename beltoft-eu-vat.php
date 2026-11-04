@@ -3,7 +3,7 @@
  * Plugin Name:       Beltoft EU VAT for WooCommerce
  * Plugin URI:        https://beltoft.net/
  * Description:       An optional EU VAT number field at checkout, checked against VIES. A valid number from another EU country removes VAT (reverse charge) and the evidence is stored on the order.
- * Version:           0.2.1
+ * Version:           0.3.0
  * Requires at least: 6.5
  * Requires PHP:      8.0
  * Requires Plugins:  woocommerce
@@ -24,7 +24,7 @@ defined( 'ABSPATH' ) || exit;
 define( 'BELTOFT_EU_VAT_FILE', __FILE__ );
 define( 'BELTOFT_EU_VAT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'BELTOFT_EU_VAT_URL', plugin_dir_url( __FILE__ ) );
-define( 'BELTOFT_EU_VAT_VERSION', '0.2.1' );
+define( 'BELTOFT_EU_VAT_VERSION', '0.3.0' );
 
 spl_autoload_register(
 	static function ( $class_name ) {
@@ -54,3 +54,12 @@ add_action(
 );
 
 add_action( 'plugins_loaded', array( \BeltoftEuVat\Plugin::class, 'boot' ), 20 );
+
+register_deactivation_hook(
+	__FILE__,
+	static function () {
+		if ( class_exists( '\BeltoftEuVat\Recheck' ) ) {
+			\BeltoftEuVat\Recheck::unschedule();
+		}
+	}
+);

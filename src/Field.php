@@ -110,7 +110,7 @@ final class Field {
 			return $field;
 		}
 
-		return substr( $field, 0, $pos ) . self::message_html( '', '' ) . substr( $field, $pos );
+		return substr( $field, 0, $pos ) . self::status_html() . self::message_html( '', '' ) . self::stored_html() . substr( $field, $pos );
 	}
 
 	/**
@@ -121,6 +121,61 @@ final class Field {
 	 */
 	public static function message_html( string $text, string $type ): string {
 		return '<span class="beltoft-eu-vat-message' . ( '' !== $type ? ' is-' . esc_attr( $type ) : '' ) . '" role="status" aria-live="polite">' . esc_html( $text ) . '</span>';
+	}
+
+	/**
+	 * The line the inline check writes into (see assets/checkout.js). Hides the refresh's own line while it has text.
+	 */
+	public static function status_html(): string {
+		return '<span class="beltoft-eu-vat-status" role="status" aria-live="polite"></span>';
+	}
+
+	/**
+	 * In My Account, what is stored for the customer: confirmed with date and reference, or not confirmed.
+	 */
+	public static function stored_html(): string {
+		if ( ! self::is_account_form() || ! is_user_logged_in() ) {
+			return '';
+		}
+
+		$user_id = get_current_user_id();
+
+		if ( '' === Evidence::stored_number( $user_id ) ) {
+			return '';
+		}
+
+		return '<span class="beltoft-eu-vat-stored">' . esc_html( self::stored_text( $user_id ) ) . '</span>';
+	}
+
+	/**
+	 * The stored status of an account as text.
+	 *
+	 * @param int $user_id User id.
+	 */
+	public static function stored_text( int $user_id ): string {
+		$status = (string) get_user_meta( $user_id, Evidence::STATUS, true );
+		$when   = strtotime( (string) get_user_meta( $user_id, Evidence::CHECKED_AT, true ) );
+
+		if ( ! in_array( $status, array( 'valid', 'domestic' ), true ) || ! $when || '' !== (string) get_user_meta( $user_id, Evidence::FLAG, true ) ) {
+			return __( 'Not confirmed', 'beltoft-eu-vat' );
+		}
+
+		$reference = (string) get_user_meta( $user_id, Evidence::REQUEST_ID, true );
+
+		if ( '' === $reference ) {
+			/* translators: %s: date, for example 4 Nov 2026 */
+			return sprintf( __( 'Confirmed on %s', 'beltoft-eu-vat' ), Messages::date( $when ) );
+		}
+
+		/* translators: 1: date, for example 4 Nov 2026, 2: VIES reference number */
+		return sprintf( __( 'Confirmed on %1$s, reference %2$s', 'beltoft-eu-vat' ), Messages::date( $when ), $reference );
+	}
+
+	/**
+	 * Whether this is the My Account address form.
+	 */
+	private static function is_account_form(): bool {
+		return function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'edit-address' );
 	}
 
 	/**
@@ -141,21 +196,27 @@ final class Field {
 	}
 
 	/**
-	 * Script and style, on the classic checkout only.
+	 * Script and style, on the classic checkout and the My Account address form.
 	 */
 	public static function assets(): void {
-		if ( ! function_exists( 'is_checkout' ) || ! is_checkout() || is_order_received_page() ) {
+		$checkout = function_exists( 'is_checkout' ) && is_checkout() && ! is_order_received_page();
+
+		if ( ! $checkout && ! self::is_account_form() ) {
 			return;
 		}
 
 		wp_enqueue_style( 'beltoft-eu-vat', BELTOFT_EU_VAT_URL . 'assets/checkout.css', array(), BELTOFT_EU_VAT_VERSION );
-		wp_enqueue_script( 'beltoft-eu-vat', BELTOFT_EU_VAT_URL . 'assets/checkout.js', array( 'jquery', 'wc-checkout' ), BELTOFT_EU_VAT_VERSION, true );
+		wp_enqueue_script( 'beltoft-eu-vat', BELTOFT_EU_VAT_URL . 'assets/checkout.js', $checkout ? array( 'jquery', 'wc-checkout' ) : array( 'jquery' ), BELTOFT_EU_VAT_VERSION, true );
 		wp_localize_script(
 			'beltoft-eu-vat',
 			'beltoftEuVat',
-			array(
-				'countries' => array_merge( Countries::eu(), array( 'GB' ) ),
-				'toggle'    => (bool) apply_filters( 'beltoft_eu_vat_toggle_field', true ),
+			array_merge(
+				Inline::config(),
+				array(
+					'countries' => array_merge( Countries::eu(), array( 'GB' ) ),
+					'toggle'    => (bool) apply_filters( 'beltoft_eu_vat_toggle_field', true ),
+					'context'   => $checkout ? 'checkout' : 'account',
+				)
 			)
 		);
 	}

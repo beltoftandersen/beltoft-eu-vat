@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
  * Value object.
  *
  * Status: empty (no number), ignored (billing outside the EU), domestic, country_mismatch,
- * invalid_format, valid, unverified (VIES did not answer) or invalid. A domestic decision has
+ * invalid_format, valid, pending (nothing cached yet, VIES not asked), unverified (VIES did not answer) or invalid. A valid decision has grace set when VIES did not answer and an earlier confirmation was accepted (checked_at and request_identifier are those of that confirmation). A domestic decision has
  * confirmed set when VIES said the number is valid.
  */
 class VatDecision {
@@ -21,6 +21,7 @@ class VatDecision {
 	public bool $exempt               = false;
 	public bool $blocks_checkout      = false;
 	public bool $confirmed            = false;
+	public bool $grace                = false;
 	public string $status             = '';
 	public string $vat_number         = '';
 	public string $country            = '';
@@ -49,6 +50,6 @@ class VatDecision {
 			return $this->confirmed;
 		}
 
-		return in_array( $this->status, array( 'valid', 'invalid', 'unverified' ), true ) && 'not checked in this context' !== $this->error;
+		return in_array( $this->status, array( 'valid', 'invalid', 'unverified' ), true ) && ViesResult::NOT_CHECKED !== $this->error;
 	}
 }

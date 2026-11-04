@@ -10,11 +10,13 @@ namespace BeltoftEuVat;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The order summary refreshes only through WooCommerce's own update_order_review request. There
- * is no separate validation call. VIES is asked server-side, in woocommerce_checkout_update_order_review
- * (the refresh), woocommerce_checkout_process (the submission, before totals) and
- * woocommerce_after_checkout_validation (reuses that answer to block). The result line is
- * returned in the order review fragments.
+ * The order summary refreshes through WooCommerce's own update_order_review request, and that
+ * refresh never calls VIES: it decides from the cache (a valid answer lives 72 hours) and, with
+ * nothing cached, charges VAT with a pending note. The customer's number is checked by the
+ * inline request (Inline) right after typing, which fills the cache before the one refresh the
+ * script then asks for. VIES is asked here only when the order is placed with nothing cached
+ * (woocommerce_checkout_process, then woocommerce_after_checkout_validation reuses that answer
+ * to block). The result line is returned in the order review fragments.
  */
 final class Checkout {
 
@@ -88,8 +90,8 @@ final class Checkout {
 	}
 
 	/**
-	 * The checkout refresh: asks VIES for real (the customer is waiting on this round trip
-	 * anyway) and sets the exemption before WooCommerce works out the totals.
+	 * The checkout refresh: reads the cache only, never VIES, and sets the exemption before
+	 * WooCommerce works out the totals.
 	 *
 	 * @param mixed $post_data The form, url-encoded.
 	 */
@@ -110,10 +112,6 @@ final class Checkout {
 		}
 
 		self::$review = self::extract( $fields );
-
-		if ( '' !== self::$review['number'] ) {
-			Decisions::get( self::$review['number'], self::$review['billing_country'], true );
-		}
 
 		Exemption::apply();
 	}

@@ -56,7 +56,13 @@ final class Messages {
 	public static function for_field( VatDecision $decision ): array {
 		switch ( $decision->status ) {
 			case 'valid':
+				if ( $decision->grace ) {
+					return array( self::grace_text( $decision ), 'valid' );
+				}
+
 				return array( __( 'VAT number confirmed. VAT is not charged (reverse charge).', 'beltoft-eu-vat' ), 'valid' );
+			case 'pending':
+				return array( __( 'VAT is charged until your VAT number has been checked.', 'beltoft-eu-vat' ), 'info' );
 			case 'domestic':
 				return array(
 					sprintf(
@@ -83,6 +89,72 @@ final class Messages {
 				return array( self::error( $decision ), 'error' );
 			default:
 				return array( '', '' );
+		}
+	}
+
+	/**
+	 * The grace wording: VIES is down and an earlier confirmation is used.
+	 *
+	 * @param VatDecision $decision A decision with grace set.
+	 */
+	public static function grace_text( VatDecision $decision ): string {
+		return sprintf(
+			/* translators: %s: date of the earlier confirmation, for example 4 Nov 2026 */
+			__( 'The EU register is not answering right now. Your VAT number was confirmed on %s, so no VAT is charged (reverse charge).', 'beltoft-eu-vat' ),
+			self::date( $decision->checked_at )
+		);
+	}
+
+	/**
+	 * A date as shown to customers, for example 4 Nov 2026.
+	 *
+	 * @param int $timestamp Unix time.
+	 */
+	public static function date( int $timestamp ): string {
+		return wp_date( 'j M Y', $timestamp );
+	}
+
+	/**
+	 * The line under the field after the inline check: array( text, state, retry ). State is
+	 * valid, notfound, unreachable, info or error. Retry shows the "Check again" link.
+	 *
+	 * @param VatDecision $decision Decision made with VIES allowed.
+	 * @return array{0:string,1:string,2:bool}
+	 */
+	public static function inline( VatDecision $decision ): array {
+		switch ( $decision->status ) {
+			case 'valid':
+				if ( $decision->grace ) {
+					return array( self::grace_text( $decision ), 'valid', false );
+				}
+
+				if ( '' !== $decision->registered_name ) {
+					return array(
+						sprintf(
+							/* translators: %s: name VIES holds for the number */
+							__( 'Confirmed: %s. No VAT is charged (reverse charge).', 'beltoft-eu-vat' ),
+							$decision->registered_name
+						),
+						'valid',
+						false,
+					);
+				}
+
+				return array( __( 'Confirmed. No VAT is charged (reverse charge).', 'beltoft-eu-vat' ), 'valid', false );
+			case 'invalid':
+				return array( __( 'This VAT number was not found. Check it, or continue and VAT is charged.', 'beltoft-eu-vat' ), 'notfound', false );
+			case 'unverified':
+				if ( Settings::BLOCK === Settings::on_unreachable() ) {
+					return array( self::error( $decision ), 'unreachable', true );
+				}
+
+				return array( __( 'The EU register is not answering right now. You can continue; VAT is charged and we check again later.', 'beltoft-eu-vat' ), 'unreachable', true );
+			case 'pending':
+				return array( '', 'info', true );
+			default:
+				list( $text, $type ) = self::for_field( $decision );
+
+				return array( $text, 'error' === $type ? 'error' : 'info', false );
 		}
 	}
 }

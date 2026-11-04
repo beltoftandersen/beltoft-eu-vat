@@ -18,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
  * transport failure, a timeout, a non-2xx reply or an unknown body all give unreachable, never
  * invalid. VIES also answers HTTP 200 with valid:false and a userError code for outages and
  * limits (MS_UNAVAILABLE, TIMEOUT, MS_MAX_CONCURRENT_REQ ...): any userError other than VALID or
- * INVALID is unreachable too. A valid answer is cached for 24 hours, an invalid one for 10
+ * INVALID is unreachable too. A valid answer is cached for 72 hours, an invalid one for 10
  * minutes and an unreachable one for 60 seconds (all filterable), so a repeated or junk number
  * does not ask VIES again. An unreachable answer never becomes invalid from the cache.
  */
@@ -34,8 +34,9 @@ class ViesClient {
 	 * @param string $country      VIES member state code (EL for Greece).
 	 * @param string $number       Number without the country prefix.
 	 * @param bool   $allow_remote False answers from the cache only, never over HTTP.
+	 * @param bool   $fresh        True ignores the cache and asks VIES (the nightly re-check). The answer is cached as usual.
 	 */
-	public static function check( string $country, string $number, bool $allow_remote = true ): ViesResult {
+	public static function check( string $country, string $number, bool $allow_remote = true, bool $fresh = false ): ViesResult {
 		$country = strtoupper( trim( $country ) );
 		$number  = Settings::normalise( $number );
 
@@ -50,7 +51,7 @@ class ViesClient {
 			return new ViesResult( 'invalid', '', '', 'number too long' );
 		}
 
-		$cached = get_transient( self::cache_key( $country, $number ) );
+		$cached = $fresh ? false : get_transient( self::cache_key( $country, $number ) );
 
 		if ( is_array( $cached ) && isset( $cached['status'] ) ) {
 			if ( 'valid' === $cached['status'] ) {
@@ -73,7 +74,7 @@ class ViesClient {
 		}
 
 		if ( ! $allow_remote ) {
-			return new ViesResult( 'unreachable', '', '', 'not checked in this context' );
+			return new ViesResult( 'unreachable', '', '', ViesResult::NOT_CHECKED );
 		}
 
 		$body = array(
@@ -126,6 +127,8 @@ class ViesClient {
 		);
 
 		if ( $result->is_valid() ) {
+			Grace::remember( $country, $number, $result );
+
 			set_transient(
 				self::cache_key( $country, $number ),
 				array(
@@ -134,9 +137,11 @@ class ViesClient {
 					'registered_name'    => $result->registered_name,
 					'checked_at'         => $result->checked_at,
 				),
-				(int) apply_filters( 'beltoft_eu_vat_cache_ttl', DAY_IN_SECONDS )
+				(int) apply_filters( 'beltoft_eu_vat_cache_ttl', 3 * DAY_IN_SECONDS )
 			);
 		} else {
+			Grace::forget( $country, $number );
+
 			set_transient(
 				self::cache_key( $country, $number ),
 				array(
@@ -148,6 +153,22 @@ class ViesClient {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Drops a remembered unreachable answer, so that "check again" asks VIES again. A valid or
+	 * invalid answer is left in place.
+	 *
+	 * @param string $country Member state code.
+	 * @param string $number  Number without prefix.
+	 */
+	public static function forget_unreachable( string $country, string $number ): void {
+		$key    = self::cache_key( $country, Settings::normalise( $number ) );
+		$cached = get_transient( $key );
+
+		if ( is_array( $cached ) && 'unreachable' === ( $cached['status'] ?? '' ) ) {
+			delete_transient( $key );
+		}
 	}
 
 	/**

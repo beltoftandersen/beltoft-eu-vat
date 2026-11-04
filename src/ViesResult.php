@@ -15,6 +15,9 @@ defined( 'ABSPATH' ) || exit;
  */
 class ViesResult {
 
+	/** Error text of the cache-only answer when nothing is cached: VIES was not asked. */
+	public const NOT_CHECKED = 'not checked in this context';
+
 	public string $status;
 	public string $request_identifier;
 	public string $registered_name;
@@ -50,5 +53,12 @@ class ViesResult {
 	 */
 	public function is_unreachable(): bool {
 		return 'unreachable' === $this->status;
+	}
+
+	/**
+	 * Whether VIES was not asked at all (cache-only lookup with nothing cached).
+	 */
+	public function is_pending(): bool {
+		return 'unreachable' === $this->status && self::NOT_CHECKED === $this->error;
 	}
 }

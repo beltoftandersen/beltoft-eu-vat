@@ -113,6 +113,19 @@ final class SettingsPage {
 				'desc_tip' => true,
 			),
 			array(
+				'title'             => __( 'Grace when VIES is down (days)', 'beltoft-eu-vat' ),
+				'desc'              => __( 'While VIES does not answer, a number that VIES confirmed within this many days is accepted as reverse charge and the order is not flagged. 0 turns it off.', 'beltoft-eu-vat' ),
+				'id'                => Settings::GRACE_DAYS,
+				'type'              => 'number',
+				'default'           => '30',
+				'css'               => 'width: 80px;',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+				'desc_tip'          => true,
+			),
+			array(
 				'title'    => __( 'Review email', 'beltoft-eu-vat' ),
 				'desc'     => __( 'Receives a mail when an order is flagged. Leave empty to use the site administrator email.', 'beltoft-eu-vat' ),
 				'id'       => Settings::ADMIN_EMAIL,
