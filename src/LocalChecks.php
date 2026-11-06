@@ -33,6 +33,10 @@ final class LocalChecks {
 	 * @return bool|null
 	 */
 	public static function run( string $country, string $number, string $raw ) {
+		if ( false === VatFormats::matches( $country, $number ) ) {
+			return false;
+		}
+
 		$result = apply_filters( 'beltoft_eu_vat_local_check', null, $country, $number, $raw );
 
 		return is_bool( $result ) ? $result : null;
