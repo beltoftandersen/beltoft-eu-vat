@@ -23,10 +23,12 @@ class JavaScriptTest extends TestCase {
 		$this->assertStringNotContainsString( 'setTimeout', $code );
 		$this->assertStringNotContainsString( 'timer', $code );
 
-		// The input handler only drops an unfinished check and the old status line.
+		// The input handler drops an unfinished check and the old status line, and checks only a number that is full
+		// for its country (no longer number could still be valid).
 		preg_match( "#on\( 'input', field, function \( event \) \{(.*?)\n\t\} \);#s", $code, $match );
 		$this->assertNotEmpty( $match );
-		$this->assertStringNotContainsString( 'check(', $match[1] );
+		$this->assertSame( 1, substr_count( $match[1], 'check(' ) );
+		$this->assertMatchesRegularExpression( '#if \( full\(\) && signature\(\) !== last \) \{\s*check\( false \);#', $match[1] );
 		$this->assertStringNotContainsString( 'refresh(', $match[1] );
 		$this->assertStringContainsString( 'xhr.abort()', $match[1] );
 	}

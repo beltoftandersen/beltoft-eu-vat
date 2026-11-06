@@ -69,6 +69,40 @@
 		return new RegExp( '^(?:' + found.info.pattern + ')$' ).test( found.bare );
 	}
 
+	/**
+	 * Complete, and no longer number could still be valid for the country (a variable-length format such as
+	 * Romanian or Lithuanian is checked when the customer leaves the field instead).
+	 */
+	function full() {
+		var found = format();
+		var tails = [ '' ];
+		var re;
+		var i;
+		var j;
+		var next;
+
+		if ( ! found || ! complete() ) {
+			return false;
+		}
+
+		re = new RegExp( '^(?:' + found.info.pattern + ')$' );
+
+		for ( i = 0; i < 3; i++ ) {
+			next = [];
+			for ( j = 0; j < tails.length; j++ ) {
+				next.push( tails[ j ] + '0', tails[ j ] + 'A' );
+			}
+			tails = next;
+			for ( j = 0; j < tails.length; j++ ) {
+				if ( re.test( found.bare + tails[ j ] ) ) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	function signature() {
 		return normalised() + '|' + country();
 	}
@@ -194,6 +228,11 @@
 
 		if ( line().text() || line().attr( 'class' ) !== 'beltoft-eu-vat-status' ) {
 			show( '', '' );
+		}
+
+		// The number is now complete for its country: check it at once, without waiting for the customer to leave the field.
+		if ( full() && signature() !== last ) {
+			check( false );
 		}
 	} );
 
