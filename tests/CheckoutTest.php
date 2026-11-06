@@ -39,6 +39,17 @@ class CheckoutTest extends TestCase {
 		$this->assertStringContainsString( 'class="beltoft-eu-vat-message is-valid"', $html );
 	}
 
+	public function test_a_refresh_while_the_number_is_half_typed_says_nothing_but_the_order_is_refused() {
+		$html = $this->refresh( 'PT51', 'PT' );
+
+		$this->assertStringNotContainsString( 'not valid', $html );
+		$this->assertStringNotContainsString( 'is-error', $html );
+		$this->assertSame( 0, $this->requests, 'VIES is not asked.' );
+
+		$errors = $this->errors( array( 'billing_eu_vat_number' => 'PT51', 'billing_country' => 'PT' ) );
+		$this->assertNotEmpty( $errors->get_error_messages(), 'Placing the order with it is still refused.' );
+	}
+
 	public function test_domestic_number_message_names_the_seller_country() {
 		$html = $this->refresh( 'DK12345678', 'DK' );
 

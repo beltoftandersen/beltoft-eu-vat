@@ -130,6 +130,13 @@ final class Checkout {
 		$decision = self::$review['number'] ? Decisions::get( self::$review['number'], self::$review['billing_country'], false ) : new VatDecision();
 		list( $text, $type ) = Messages::for_field( $decision );
 
+		// A refresh can come while the customer is still typing the number (another field changed): an incomplete or
+		// malformed number says nothing here. The field's own hint and the submission tell them.
+		if ( 'invalid_format' === $decision->status ) {
+			$text = '';
+			$type = '';
+		}
+
 		$fragments['.beltoft-eu-vat-message'] = Field::message_html( $text, $type );
 
 		return $fragments;

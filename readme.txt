@@ -4,7 +4,7 @@ Tags: woocommerce, vat, eu vat, vies, reverse charge
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.3.0
+Stable tag: 0.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,7 +52,7 @@ Yes, with the `beltoft_eu_vat_local_check` filter. It receives null, the country
 
 == Changelog ==
 
-= Unreleased =
+= 0.3.1 =
 * No check and no checkout refresh while typing; the check runs on leaving the field, Enter or page load. Partial numbers are never sent (per-country formats, local hint, server-side refusal before VIES).
 
 = 0.3.0 =
