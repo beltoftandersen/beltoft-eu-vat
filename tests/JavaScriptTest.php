@@ -17,11 +17,33 @@ class JavaScriptTest extends TestCase {
 		$this->assertSame( 1, substr_count( $this->code(), 'update_checkout' ) );
 	}
 
-	public function test_the_check_starts_on_blur_or_600_ms_after_real_typing() {
+	public function test_nothing_is_asked_while_typing() {
 		$code = $this->code();
 
-		$this->assertMatchesRegularExpression( "#on\( 'input', field, function \( event \) \{\s*if \( ! event\.originalEvent \) \{\s*return;\s*\}.*setTimeout\(.*check\( false \).*\}, 600 \)#s", $code );
-		$this->assertMatchesRegularExpression( "#on\( 'focusout', field, function \(\) \{\s*if \( signature\(\) !== last \) \{\s*check\( false \);#s", $code );
+		$this->assertStringNotContainsString( 'setTimeout', $code );
+		$this->assertStringNotContainsString( 'timer', $code );
+
+		// The input handler only drops an unfinished check and the old status line.
+		preg_match( "#on\( 'input', field, function \( event \) \{(.*?)\n\t\} \);#s", $code, $match );
+		$this->assertNotEmpty( $match );
+		$this->assertStringNotContainsString( 'check(', $match[1] );
+		$this->assertStringNotContainsString( 'refresh(', $match[1] );
+		$this->assertStringContainsString( 'xhr.abort()', $match[1] );
+	}
+
+	public function test_the_check_starts_on_leaving_the_field_or_enter() {
+		$code = $this->code();
+
+		$this->assertMatchesRegularExpression( "#on\( 'focusout change', field, function \(\) \{\s*if \( signature\(\) !== last \) \{\s*check\( false \);#s", $code );
+		$this->assertMatchesRegularExpression( "#on\( 'keydown', field, function \( event \) \{\s*if \( 13 !== event\.which \) \{\s*return;\s*\}\s*event\.preventDefault\(\);\s*if \( signature\(\) !== last \) \{\s*check\( false \);#s", $code );
+	}
+
+	public function test_an_incomplete_number_is_not_sent() {
+		$code = $this->code();
+
+		$this->assertMatchesRegularExpression( "#if \( ! number \|\| ! complete\(\) \) \{.*?return;\s*\}\s*show\( strings\.checking#s", $code );
+		$this->assertStringContainsString( 'data.formats', $code );
+		$this->assertStringContainsString( 'if ( applied ) {', $code );
 	}
 
 	public function test_the_refresh_is_asked_once_after_a_check_and_never_from_a_bare_load() {

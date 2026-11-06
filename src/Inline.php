@@ -93,9 +93,13 @@ final class Inline {
 		return array(
 			'url'      => \WC_AJAX::get_endpoint( self::ACTION ),
 			'nonce'    => wp_create_nonce( self::NONCE ),
+			'formats'  => VatFormats::for_script(),
 			'strings'  => array(
 				'checking' => __( 'Checking with the EU VAT register…', 'beltoft-eu-vat' ),
 				'again'    => __( 'Check again', 'beltoft-eu-vat' ),
+				'incomplete' => __( 'This does not look like a complete VAT number.', 'beltoft-eu-vat' ),
+				/* translators: 1: nationality such as Danish, 2: an example number with its country prefix. */
+				'hint'     => __( 'A %1$s VAT number looks like %2$s.', 'beltoft-eu-vat' ),
 				'failed'   => __( 'The EU register could not be reached from this page. You can continue; VAT is charged and we check again later.', 'beltoft-eu-vat' ),
 			),
 		);

@@ -1,17 +1,18 @@
 /**
  * EU VAT number field: checkout and My Account address form.
  *
- * The customer's number is checked by one small request (wc-ajax) right after typing: on blur,
- * or 600 ms after the typing stops. The answer is written into an inline status line. On the
- * checkout the script then asks for exactly one update_checkout, so the order summary reads the
- * answer from the cache. The checkout refresh itself never calls VIES. It never asks on page
- * load, except to check a number that is already in the field on the checkout. In My Account the
- * stored status shows until the customer changes the number; a fresh result replaces it.
+ * Nothing happens while the customer types: no request and no checkout refresh. The number is
+ * checked once the customer is done: on leaving the field, on Enter, or at page load for a number
+ * that is already there. Only a number that is complete for its country is sent (formats come
+ * from PHP); an incomplete one gets a short local hint and no request. A change of billing
+ * country re-checks the number. The answer is written into an inline status line. On the checkout
+ * the script then asks for exactly one update_checkout, so the order summary reads the answer
+ * from the cache. The checkout refresh itself never calls VIES. In My Account the stored status
+ * shows until the customer changes the number; a fresh result replaces it.
  */
 ( function ( $ ) {
 	'use strict';
 
-	var timer = null;
 	var xhr = null;
 	var seq = 0;
 	var last = '';
@@ -20,6 +21,8 @@
 	var data = window.beltoftEuVat || { countries: [], toggle: false, strings: {} };
 	var strings = data.strings || {};
 	var minLength = 8;
+	var formats = data.formats || {};
+	var applied = false;
 
 	function normalised() {
 		return String( $( field ).val() || '' ).toUpperCase().replace( /[^A-Z0-9]/g, '' );
@@ -27,6 +30,43 @@
 
 	function country() {
 		return $( '#billing_country' ).val() || '';
+	}
+
+	function format() {
+		var number = normalised();
+		var prefix = number.substr( 0, 2 );
+		var code = 'EL' === prefix ? 'GR' : prefix;
+
+		if ( ! formats[ code ] ) {
+			code = String( country() ).toUpperCase();
+			prefix = '';
+		}
+
+		if ( ! formats[ code ] ) {
+			return null;
+		}
+
+		return { code: code, bare: prefix ? number.substr( 2 ) : number, info: formats[ code ] };
+	}
+
+	function hint() {
+		var found = format();
+
+		if ( found && found.info.example ) {
+			return ( strings.hint || 'A %1$s VAT number looks like %2$s.' ).replace( '%1$s', found.info.name ).replace( '%2$s', found.info.prefix + found.info.example );
+		}
+
+		return strings.incomplete || 'This does not look like a complete VAT number.';
+	}
+
+	function complete() {
+		var found = format();
+
+		if ( ! found ) {
+			return normalised().length >= minLength;
+		}
+
+		return new RegExp( '^(?:' + found.info.pattern + ')$' ).test( found.bare );
 	}
 
 	function signature() {
@@ -78,6 +118,8 @@
 	}
 
 	function refresh() {
+		applied = true;
+
 		if ( 'checkout' === data.context ) {
 			$( document.body ).trigger( 'update_checkout' );
 		}
@@ -87,8 +129,6 @@
 		var id = ++seq;
 		var number = normalised();
 
-		clearTimeout( timer );
-
 		if ( xhr ) {
 			xhr.abort();
 			xhr = null;
@@ -96,9 +136,15 @@
 
 		last = signature();
 
-		if ( number.length < minLength ) {
-			show( '', '' );
-			refresh();
+		if ( ! number || ! complete() ) {
+			show( number ? hint() : '', number ? 'error' : '' );
+
+			// An earlier answer is still in the summary: one refresh drops it.
+			if ( applied ) {
+				refresh();
+				applied = false;
+			}
+
 			return;
 		}
 
@@ -134,19 +180,37 @@
 		} );
 	}
 
+	// Typing: no request, no refresh. Drop an unfinished check and the old status line quietly.
 	$( document.body ).on( 'input', field, function ( event ) {
 		if ( ! event.originalEvent ) {
 			return;
 		}
 
-		clearTimeout( timer );
-		show( '', '' );
-		timer = setTimeout( function () {
-			check( false );
-		}, 600 );
+		if ( xhr ) {
+			seq++;
+			xhr.abort();
+			xhr = null;
+		}
+
+		if ( line().text() || line().attr( 'class' ) !== 'beltoft-eu-vat-status' ) {
+			show( '', '' );
+		}
 	} );
 
-	$( document.body ).on( 'focusout', field, function () {
+	// Done: leaving the field, or Enter (which would otherwise place the order).
+	$( document.body ).on( 'focusout change', field, function () {
+		if ( signature() !== last ) {
+			check( false );
+		}
+	} );
+
+	$( document.body ).on( 'keydown', field, function ( event ) {
+		if ( 13 !== event.which ) {
+			return;
+		}
+
+		event.preventDefault();
+
 		if ( signature() !== last ) {
 			check( false );
 		}

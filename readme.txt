@@ -26,7 +26,7 @@ Adds an optional "EU VAT number" field to the billing form of the classic WooCom
 = Fast checkout =
 
 * The checkout refresh never calls VIES. It reads the cache; with nothing cached, VAT is charged with a note until the number has been checked.
-* The number is checked by a small request of its own right after typing (on leaving the field, or 600 ms after the typing stops). The result shows under the field, then the order summary refreshes once.
+* The number is checked when the customer is done: on leaving the field, on Enter, or at page load for a prefilled number. Nothing is sent and the checkout does not refresh while typing. Only a number that is complete for its country is checked (formats per member state, filter `beltoft_eu_vat_formats`); an incomplete one gets a short hint. The result shows under the field, then the order summary refreshes once.
 * Without JavaScript the number is checked when the order is placed.
 * My Account > Addresses has the same check, and shows when the saved number was confirmed and the VIES reference.
 * Every night, about 01:00, the saved numbers of customers with an active subscription or a paid order in the last 12 months are checked again, 20 at a time with a pause between calls (Action Scheduler, or WP-Cron without it). The result is kept on the account. If a number that was valid is no longer, the customer is marked, the shop admin gets one email and the next order is charged VAT. If VIES does not answer, nothing changes and it is tried again the next night.
@@ -51,6 +51,9 @@ User meta and order meta `billing_eu_vat_number` (order meta with a leading unde
 Yes, with the `beltoft_eu_vat_local_check` filter. It receives null, the country, the number without prefix and the number as typed, and returns true, false or null. Portugal's NIF check digit is built in as an example. Other filters: `beltoft_eu_vat_seller_country`, `beltoft_eu_vat_own_number`, `beltoft_eu_vat_label`, `beltoft_eu_vat_admin_email`, `beltoft_eu_vat_destination`, `beltoft_eu_vat_cache_ttl` (default 3 days), `beltoft_eu_vat_grace_days` (default 30, 0 is off), `beltoft_eu_vat_check_rate_limit`, `beltoft_eu_vat_recheck_batch_size`, `beltoft_eu_vat_recheck_pause_ms`, `beltoft_eu_vat_recheck_batch_interval`, `beltoft_eu_vat_recheck_hour`, `beltoft_eu_vat_recheck_eligible`, `beltoft_eu_vat_toggle_field`, `beltoft_eu_vat_address_label`, `beltoft_eu_vat_reverse_charge_text`.
 
 == Changelog ==
+
+= Unreleased =
+* No check and no checkout refresh while typing; the check runs on leaving the field, Enter or page load. Partial numbers are never sent (per-country formats, local hint, server-side refusal before VIES).
 
 = 0.3.0 =
 * The checkout refresh never calls VIES. A valid answer is cached for 72 hours.
