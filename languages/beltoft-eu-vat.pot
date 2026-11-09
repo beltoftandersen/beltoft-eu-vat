@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Beltoft EU VAT for WooCommerce 0.1.0\n"
+"Project-Id-Version: Beltoft EU VAT for WooCommerce 0.3.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/beltoft-eu-vat\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-31T19:03:13+00:00\n"
+"POT-Creation-Date: 2026-11-09T08:48:14+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: beltoft-eu-vat\n"
@@ -56,6 +56,10 @@ msgstr ""
 #: src/AccountUpdate.php:80
 #: src/Messages.php:29
 msgid "The VAT number you entered could not be validated. Please correct it or leave the field empty."
+msgstr ""
+
+#: src/AddressFormat.php:122
+msgid "VAT"
 msgstr ""
 
 #: src/Countries.php:49
@@ -170,36 +174,152 @@ msgstr ""
 msgid "Slovak"
 msgstr ""
 
+#: src/Field.php:160
+msgid "Not confirmed"
+msgstr ""
+
+#. translators: %s: date, for example 4 Nov 2026
+#: src/Field.php:167
+#, php-format
+msgid "Confirmed on %s"
+msgstr ""
+
+#. translators: 1: date, for example 4 Nov 2026, 2: VIES reference number
+#: src/Field.php:171
+#, php-format
+msgid "Confirmed on %1$s, reference %2$s"
+msgstr ""
+
+#: src/Inline.php:52
+msgid "The page has expired. Reload it and try again."
+msgstr ""
+
+#: src/Inline.php:59
+msgid "Too many checks. Please wait a minute and try again."
+msgstr ""
+
+#: src/Inline.php:98
+msgid "Checking with the EU VAT register…"
+msgstr ""
+
+#: src/Inline.php:99
+msgid "Check again"
+msgstr ""
+
+#: src/Inline.php:100
+msgid "This does not look like a complete VAT number."
+msgstr ""
+
+#. translators: 1: nationality such as Danish, 2: an example number with its country prefix.
+#: src/Inline.php:102
+#, php-format
+msgid "A %1$s VAT number looks like %2$s."
+msgstr ""
+
+#: src/Inline.php:103
+msgid "The EU register could not be reached from this page. You can continue; VAT is charged and we check again later."
+msgstr ""
+
 #: src/Messages.php:32
 msgid "The VAT number could not be checked right now. Please try again in a few minutes or leave the field empty."
 msgstr ""
 
-#: src/Messages.php:59
+#: src/Messages.php:63
 msgid "VAT number confirmed. VAT is not charged (reverse charge)."
 msgstr ""
 
+#: src/Messages.php:65
+msgid "VAT is charged until your VAT number has been checked."
+msgstr ""
+
 #. translators: %s: adjective for the seller's country, for example Danish
-#: src/Messages.php:64
+#: src/Messages.php:71
+#, php-format
+msgid "VAT number confirmed. %s VAT is charged on domestic sales."
+msgstr ""
+
+#. translators: %s: adjective for the seller's country, for example Danish
+#: src/Messages.php:73
 #, php-format
 msgid "%s VAT is charged on domestic sales."
 msgstr ""
 
-#: src/Messages.php:76
+#: src/Messages.php:85
 msgid "The VAT number could not be checked right now. VAT is charged and the order will be reviewed."
 msgstr ""
 
+#. translators: %s: date of the earlier confirmation, for example 4 Nov 2026
+#: src/Messages.php:103
+#, php-format
+msgid "The EU register is not answering right now. Your VAT number was confirmed on %s, so no VAT is charged (reverse charge)."
+msgstr ""
+
+#. translators: %s: name VIES holds for the number
+#: src/Messages.php:135
+#, php-format
+msgid "Confirmed: %s. No VAT is charged (reverse charge)."
+msgstr ""
+
+#: src/Messages.php:143
+msgid "Confirmed. No VAT is charged (reverse charge)."
+msgstr ""
+
+#: src/Messages.php:145
+msgid "This VAT number was not found in the EU register. Check it, or remove it to continue with VAT charged."
+msgstr ""
+
+#: src/Messages.php:151
+msgid "The EU register is not answering right now. You can continue; VAT is charged and we check again later."
+msgstr ""
+
+#: src/OrderEvidence.php:51
+msgid "The VAT number is missing, so VAT cannot be removed. Please enter your VAT number and try again."
+msgstr ""
+
+#: src/OrderEvidence.php:62
+msgid "no answer was available when the order was placed"
+msgstr ""
+
+#. translators: %s: date of the VIES confirmation that was used, for example 4 Nov 2026
+#: src/OrderEvidence.php:105
+#, php-format
+msgid "Accepted on the confirmation of %s (VIES unreachable)."
+msgstr ""
+
 #. translators: %s: detail from the VIES service
-#: src/OrderEvidence.php:78
+#: src/OrderEvidence.php:116
 #, php-format
 msgid "VAT number could not be verified: VIES did not answer (%s). VAT was charged and this order needs review."
 msgstr ""
 
-#: src/OrderEvidence.php:79
+#: src/OrderEvidence.php:117
 msgid "no detail"
 msgstr ""
 
-#: src/Plugin.php:55
+#: src/Plugin.php:59
 msgid "Beltoft EU VAT for WooCommerce needs WooCommerce to be active."
+msgstr ""
+
+#. translators: %s: customer name or login
+#: src/Recheck.php:306
+#, php-format
+msgid "VAT number no longer valid for %s"
+msgstr ""
+
+#. translators: 1: VAT number, 2: customer email, 3: link to the customer
+#: src/Recheck.php:311
+#, php-format
+msgid ""
+"The nightly check found that VIES no longer confirms VAT number %1$s, which was valid before.\n"
+"\n"
+"Customer: %2$s\n"
+"Open the customer: %3$s\n"
+"\n"
+"The customer's next order is charged VAT. If the number should still be valid, ask the customer."
+msgstr ""
+
+#: src/ReverseChargeNote.php:42
+msgid "Reverse charge: VAT is to be accounted for by the customer (Article 196, Council Directive 2006/112/EC)."
 msgstr ""
 
 #. translators: %s: order number
@@ -262,7 +382,7 @@ msgstr ""
 msgid "EU VAT check marked as reviewed."
 msgstr ""
 
-#: src/Settings.php:74
+#: src/Settings.php:76
 #: src/SettingsPage.php:59
 msgid "EU VAT number"
 msgstr ""
@@ -284,45 +404,65 @@ msgid "Seller country"
 msgstr ""
 
 #: src/SettingsPage.php:66
-msgid "Numbers from this country are domestic sales: VAT is charged and VIES is not asked."
+msgid "Numbers from this country are domestic sales: VAT is charged and the number is never exempt."
 msgstr ""
 
 #: src/SettingsPage.php:76
-msgid "Your own VAT number"
+msgid "Domestic numbers"
 msgstr ""
 
 #: src/SettingsPage.php:77
-msgid "With the country prefix, for example DK12345678. Sent to VIES as the requester so that VIES returns a consultation number, which is stored as evidence on the order."
+msgid "Check domestic VAT numbers with VIES"
+msgstr ""
+
+#: src/SettingsPage.php:81
+msgid "A mistyped number of your own country is refused at checkout. An unreachable service never blocks a domestic number."
+msgstr ""
+
+#: src/SettingsPage.php:84
+msgid "Your own VAT number"
 msgstr ""
 
 #: src/SettingsPage.php:85
+msgid "With the country prefix, for example DK12345678. Sent to VIES as the requester so that VIES returns a consultation number, which is stored as evidence on the order."
+msgstr ""
+
+#: src/SettingsPage.php:93
 msgid "Field label"
 msgstr ""
 
-#: src/SettingsPage.php:86
+#: src/SettingsPage.php:94
 msgid "Leave empty for \"EU VAT number\"."
 msgstr ""
 
-#: src/SettingsPage.php:94
+#: src/SettingsPage.php:102
 msgid "When VIES does not answer"
 msgstr ""
 
-#: src/SettingsPage.php:95
+#: src/SettingsPage.php:103
 msgid "VIES goes offline now and then. An unreachable service never counts as an invalid number."
 msgstr ""
 
-#: src/SettingsPage.php:102
+#: src/SettingsPage.php:110
 msgid "Charge VAT and flag the order for review"
 msgstr ""
 
-#: src/SettingsPage.php:103
+#: src/SettingsPage.php:111
 msgid "Block the checkout"
 msgstr ""
 
-#: src/SettingsPage.php:108
+#: src/SettingsPage.php:116
+msgid "Grace when VIES is down (days)"
+msgstr ""
+
+#: src/SettingsPage.php:117
+msgid "While VIES does not answer, a number that VIES confirmed within this many days is accepted as reverse charge and the order is not flagged. 0 turns it off."
+msgstr ""
+
+#: src/SettingsPage.php:129
 msgid "Review email"
 msgstr ""
 
-#: src/SettingsPage.php:109
+#: src/SettingsPage.php:130
 msgid "Receives a mail when an order is flagged. Leave empty to use the site administrator email."
 msgstr ""
