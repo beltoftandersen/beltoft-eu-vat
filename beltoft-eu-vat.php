@@ -53,6 +53,17 @@ add_action(
 	}
 );
 
+/**
+ * Loads the plugin's bundled translations (front end and admin).
+ *
+ * The plugin is not hosted on wordpress.org, so WordPress does not look in its own languages folder by itself.
+ */
+function beltoft_eu_vat_load_textdomain() {
+	// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
+	load_plugin_textdomain( 'beltoft-eu-vat', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+}
+add_action( 'init', 'beltoft_eu_vat_load_textdomain', 0 );
+
 add_action( 'plugins_loaded', array( \BeltoftEuVat\Plugin::class, 'boot' ), 20 );
 
 register_deactivation_hook(
