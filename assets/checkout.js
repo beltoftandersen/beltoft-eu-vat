@@ -281,11 +281,29 @@
 		}
 	} );
 
-	// A changed company or name is checked again against the register's name, once the customer leaves the field.
-	$( document.body ).on( 'change', '#billing_company, #billing_first_name, #billing_last_name', function () {
-		if ( normalised() && applies() && signature() !== last ) {
-			check( false );
+	// A changed company or name is checked again against the register's name. On leaving the field, and also a moment after
+	// the last keystroke or an autofill or paste that never moves focus, so the summary never keeps a judgement of an old name.
+	var nameTimer = null;
+	var nameFields = '#billing_company, #billing_first_name, #billing_last_name';
+
+	$( document.body ).on( 'input change focusout', nameFields, function ( event ) {
+		window.clearTimeout( nameTimer );
+
+		if ( ! normalised() || ! applies() || signature() === last ) {
+			return;
 		}
+
+		if ( 'input' === event.type ) {
+			nameTimer = window.setTimeout( function () {
+				if ( signature() !== last ) {
+					check( false );
+				}
+			}, 700 );
+
+			return;
+		}
+
+		check( false );
 	} );
 
 	toggleWrapper();

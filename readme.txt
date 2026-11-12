@@ -4,7 +4,7 @@ Tags: woocommerce, vat, eu vat, vies, reverse charge
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.4.0
+Stable tag: 0.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -53,6 +53,9 @@ User meta and order meta `billing_eu_vat_number` (order meta with a leading unde
 Yes, with the `beltoft_eu_vat_local_check` filter. It receives null, the country, the number without prefix and the number as typed, and returns true, false or null. Portugal's NIF check digit is built in as an example. Other filters: `beltoft_eu_vat_seller_country`, `beltoft_eu_vat_own_number`, `beltoft_eu_vat_label`, `beltoft_eu_vat_admin_email`, `beltoft_eu_vat_destination`, `beltoft_eu_vat_cache_ttl` (default 3 days), `beltoft_eu_vat_grace_days` (default 30, 0 is off), `beltoft_eu_vat_check_rate_limit`, `beltoft_eu_vat_recheck_batch_size`, `beltoft_eu_vat_recheck_pause_ms`, `beltoft_eu_vat_recheck_batch_interval`, `beltoft_eu_vat_recheck_hour`, `beltoft_eu_vat_recheck_eligible`, `beltoft_eu_vat_name_matches`, `beltoft_eu_vat_name_similarity`, `beltoft_eu_vat_toggle_field`, `beltoft_eu_vat_address_label`, `beltoft_eu_vat_reverse_charge_text`.
 
 == Changelog ==
+
+= 0.4.1 =
+* A change of the company or billing name is checked again a moment after the last keystroke, not only when the field loses focus (autofill, paste or a script never fire the change event), so the message and the order summary follow the name. Placing the order always judges the posted company.
 
 = 0.4.0 =
 * The company name must match. A valid number in the right country removes VAT only when the billing company (or, for a sole trader, the billing name) matches the name the VAT register holds. Otherwise VAT is charged, the customer is told which company the number belongs to, and the order is not blocked. Setting "Require the company name to match the VAT register" (on) can be turned off.

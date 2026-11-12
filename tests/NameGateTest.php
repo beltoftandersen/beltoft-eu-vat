@@ -307,4 +307,69 @@ class NameGateTest extends TestCase {
 		$this->assertSame( Settings::ALLOW, \BeltoftEuVat\SettingsPage::sanitize_name_missing( 'junk' ) );
 		$this->assertSame( Settings::CHARGE, \BeltoftEuVat\SettingsPage::sanitize_name_missing( 'charge' ) );
 	}
+
+	private function refresh( string $company ): array {
+		do_action( 'woocommerce_checkout_update_order_review', 'billing_eu_vat_number=DE123456789&billing_country=DE&billing_company=' . rawurlencode( $company ) );
+		Exemption::apply();
+
+		return array(
+			\BeltoftEuVat\Exemption::is_exempt(),
+			apply_filters( 'woocommerce_update_order_review_fragments', array() )['.beltoft-eu-vat-message'],
+		);
+	}
+
+	public function test_a_changed_company_between_two_refreshes_flips_the_result_both_ways() {
+		$this->cache_name( 'ACME GMBH' );
+
+		list( $exempt, $html ) = $this->refresh( 'Globex' );
+		$this->assertFalse( $exempt );
+		$this->assertStringContainsString( 'belongs to ACME GMBH', $html );
+
+		list( $exempt, $html ) = $this->refresh( 'Acme GmbH' );
+		$this->assertTrue( $exempt );
+		$this->assertStringContainsString( 'VAT number confirmed', $html );
+		$this->assertTrue( WC()->customer->get_is_vat_exempt() );
+
+		list( $exempt, $html ) = $this->refresh( 'Globex' );
+		$this->assertFalse( $exempt );
+		$this->assertStringContainsString( 'belongs to ACME GMBH', $html );
+		$this->assertFalse( WC()->customer->get_is_vat_exempt(), 'the flag is switched off again' );
+	}
+
+	public function test_a_changed_billing_name_between_two_refreshes_flips_the_result() {
+		$this->cache_name( 'JENSEN, HANS' );
+		$post = static fn( string $f, string $l ) => do_action( 'woocommerce_checkout_update_order_review', 'billing_eu_vat_number=DE123456789&billing_country=DE&billing_first_name=' . $f . '&billing_last_name=' . $l );
+
+		$post( 'Peter', 'Larsen' );
+		$this->assertFalse( Exemption::is_exempt() );
+		$post( 'Hans', 'Jensen' );
+		$this->assertTrue( Exemption::is_exempt() );
+	}
+
+	public function test_placing_the_order_judges_the_posted_company_not_the_last_refresh() {
+		$this->cache_name( 'ACME GMBH' );
+
+		// The summary last saw the matching company ...
+		$this->refresh( 'Acme GmbH' );
+		$this->assertTrue( Exemption::is_exempt() );
+
+		// ... but the form posted at submit carries another one: no reverse charge.
+		$this->post( 'Globex GmbH' );
+		do_action( 'woocommerce_checkout_process' );
+		$this->assertFalse( Exemption::is_exempt() );
+		Exemption::apply();
+		$this->assertFalse( WC()->customer->get_is_vat_exempt() );
+
+		// And the other way round.
+		$this->refresh( 'Globex' );
+		$this->post( 'Acme GmbH' );
+		do_action( 'woocommerce_checkout_process' );
+		$this->assertTrue( Exemption::is_exempt() );
+	}
+
+	public function test_a_company_field_change_is_rechecked_by_the_script() {
+		$js = (string) file_get_contents( dirname( __DIR__ ) . '/assets/checkout.js' );
+
+		$this->assertMatchesRegularExpression( "#on\( 'input change focusout', nameFields#", $js, 'delegated, and not only on change' );
+	}
 }

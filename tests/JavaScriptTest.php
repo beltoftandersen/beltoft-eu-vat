@@ -20,7 +20,9 @@ class JavaScriptTest extends TestCase {
 	public function test_nothing_is_asked_while_typing() {
 		$code = $this->code();
 
-		$this->assertStringNotContainsString( 'setTimeout', $code );
+		// The only timer is the short wait after a change of the company or billing name, never the VAT number.
+		$this->assertSame( 1, substr_count( $code, 'setTimeout' ) );
+		$this->assertMatchesRegularExpression( "#var nameFields = '[^']*billing_company[^']*';.*?setTimeout#s", $code );
 		$this->assertStringNotContainsString( 'timer', $code );
 
 		// The input handler drops an unfinished check and the old status line, and checks only a number that is full
