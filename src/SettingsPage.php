@@ -25,6 +25,7 @@ final class SettingsPage {
 		add_filter( 'woocommerce_admin_settings_sanitize_option_' . Settings::SELLER_COUNTRY, array( __CLASS__, 'sanitize_country' ) );
 		add_filter( 'woocommerce_admin_settings_sanitize_option_' . Settings::OWN_NUMBER, array( __CLASS__, 'sanitize_number' ) );
 		add_filter( 'woocommerce_admin_settings_sanitize_option_' . Settings::ON_UNREACHABLE, array( __CLASS__, 'sanitize_behaviour' ) );
+		add_filter( 'woocommerce_admin_settings_sanitize_option_' . Settings::NAME_MISSING, array( __CLASS__, 'sanitize_name_missing' ) );
 	}
 
 	/**
@@ -113,6 +114,35 @@ final class SettingsPage {
 				'desc_tip' => true,
 			),
 			array(
+				'title'    => __( 'Company name', 'beltoft-eu-vat' ),
+				'desc'     => __( 'Require the company name to match the VAT register', 'beltoft-eu-vat' ),
+				'id'       => Settings::NAME_MATCH,
+				'type'     => 'checkbox',
+				'default'  => 'yes',
+				'desc_tip' => __( 'VAT is removed only when the billing company (or the billing name of a sole trader) matches the name the register holds for the number. Otherwise VAT is charged and the order is not blocked.', 'beltoft-eu-vat' ),
+			),
+			array(
+				'title'    => __( 'When the register returns no name', 'beltoft-eu-vat' ),
+				'desc'     => __( 'Some member states do not disclose the name. There is then nothing to compare.', 'beltoft-eu-vat' ),
+				'id'       => Settings::NAME_MISSING,
+				'type'     => 'select',
+				'class'    => 'wc-enhanced-select',
+				'css'      => 'min-width: 300px;',
+				'default'  => Settings::ALLOW,
+				'options'  => array(
+					Settings::ALLOW  => __( 'Remove VAT as for any valid number', 'beltoft-eu-vat' ),
+					Settings::CHARGE => __( 'Charge VAT', 'beltoft-eu-vat' ),
+				),
+				'desc_tip' => true,
+			),
+			array(
+				'title'   => __( 'Registered name', 'beltoft-eu-vat' ),
+				'desc'    => __( 'Show the registered name to the customer when it does not match', 'beltoft-eu-vat' ),
+				'id'      => Settings::NAME_DISCLOSE,
+				'type'    => 'checkbox',
+				'default' => 'yes',
+			),
+			array(
 				'title'             => __( 'Grace when VIES is down (days)', 'beltoft-eu-vat' ),
 				'desc'              => __( 'While VIES does not answer, a number that VIES confirmed within this many days is accepted as reverse charge and the order is not flagged. 0 turns it off.', 'beltoft-eu-vat' ),
 				'id'                => Settings::GRACE_DAYS,
@@ -159,6 +189,15 @@ final class SettingsPage {
 	 */
 	public static function sanitize_number( $value ): string {
 		return Settings::normalise( sanitize_text_field( (string) $value ) );
+	}
+
+	/**
+	 * Keeps one of the two choices.
+	 *
+	 * @param mixed $value Submitted value.
+	 */
+	public static function sanitize_name_missing( $value ): string {
+		return Settings::CHARGE === $value ? Settings::CHARGE : Settings::ALLOW;
 	}
 
 	/**

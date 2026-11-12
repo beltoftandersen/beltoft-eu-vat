@@ -14,6 +14,7 @@ class InlineTest extends TestCase {
 					'security' => $nonce ? wp_create_nonce( Inline::NONCE ) : '',
 					'vat'      => 'DE 123 456 789',
 					'country'  => 'DE',
+					'company'  => 'ACME GmbH',
 				),
 				$extra
 			)

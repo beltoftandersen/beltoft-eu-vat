@@ -11,7 +11,7 @@ use BeltoftEuVat\Exemption;
 class RefreshTest extends TestCase {
 
 	private function refresh( string $number, string $country ): string {
-		do_action( 'woocommerce_checkout_update_order_review', 'billing_eu_vat_number=' . rawurlencode( $number ) . '&billing_country=' . $country );
+		do_action( 'woocommerce_checkout_update_order_review', 'billing_eu_vat_number=' . rawurlencode( $number ) . '&billing_company=ACME+GmbH&billing_country=' . $country );
 		$fragments = apply_filters( 'woocommerce_update_order_review_fragments', array() );
 
 		return $fragments['.beltoft-eu-vat-message'] ?? '';
@@ -62,7 +62,7 @@ class RefreshTest extends TestCase {
 
 	public function test_place_order_uses_the_cache_and_is_instant() {
 		$this->cache_valid( 'DE', '123456789' );
-		$_POST = array( 'billing_eu_vat_number' => 'DE123456789', 'billing_country' => 'DE' );
+		$_POST = array( 'billing_eu_vat_number' => 'DE123456789', 'billing_company' => 'ACME GmbH', 'billing_country' => 'DE' );
 
 		do_action( 'woocommerce_checkout_process' );
 
@@ -72,7 +72,7 @@ class RefreshTest extends TestCase {
 
 	public function test_place_order_asks_vies_only_when_nothing_is_cached() {
 		$this->vies = 'valid';
-		$_POST      = array( 'billing_eu_vat_number' => 'DE123456789', 'billing_country' => 'DE' );
+		$_POST      = array( 'billing_eu_vat_number' => 'DE123456789', 'billing_company' => 'ACME GmbH', 'billing_country' => 'DE' );
 
 		do_action( 'woocommerce_checkout_process' );
 
@@ -81,7 +81,7 @@ class RefreshTest extends TestCase {
 	}
 
 	public function test_place_order_with_vies_down_and_no_grace_is_flagged_as_before() {
-		$_POST = array( 'billing_eu_vat_number' => 'DE123456789', 'billing_country' => 'DE' );
+		$_POST = array( 'billing_eu_vat_number' => 'DE123456789', 'billing_company' => 'ACME GmbH', 'billing_country' => 'DE' );
 		do_action( 'woocommerce_checkout_process' );
 
 		$order = new \WC_Order();

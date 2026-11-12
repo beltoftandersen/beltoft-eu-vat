@@ -78,7 +78,7 @@ class AccountStatusTest extends TestCase {
 
 	public function test_the_inline_check_works_from_my_account_too() {
 		$this->vies = 'valid';
-		$reply      = \BeltoftEuVat\Inline::respond( array( 'security' => wp_create_nonce( \BeltoftEuVat\Inline::NONCE ), 'vat' => 'DE123456789', 'country' => 'DE' ) );
+		$reply      = \BeltoftEuVat\Inline::respond( array( 'security' => wp_create_nonce( \BeltoftEuVat\Inline::NONCE ), 'vat' => 'DE123456789', 'country' => 'DE', 'company' => 'ACME GmbH' ) );
 
 		$this->assertSame( 'valid', $reply['body']['state'] );
 	}

@@ -93,6 +93,35 @@ final class Messages {
 	}
 
 	/**
+	 * The line for a valid number whose holder does not match the company entered, or an empty
+	 * string when the name is fine (or the check is off). VAT is charged; nothing is blocked.
+	 *
+	 * @param VatDecision $decision Decision.
+	 * @param array       $entered  company, first_name, last_name as entered.
+	 */
+	public static function name_notice( VatDecision $decision, array $entered ): string {
+		$judged = NameGate::judge( $decision, $entered );
+
+		if ( ! $judged['checked'] || $judged['ok'] ) {
+			return '';
+		}
+
+		if ( NameGate::NO_NAME === $judged['reason'] ) {
+			return __( 'The EU register shows no company name for this VAT number, so VAT is charged.', 'beltoft-eu-vat' );
+		}
+
+		if ( Settings::name_disclose() ) {
+			return sprintf(
+				/* translators: %s: company name held by the EU VAT register */
+				__( 'This VAT number belongs to %s. Enter that company name to buy without VAT, or continue with VAT.', 'beltoft-eu-vat' ),
+				$judged['registered']
+			);
+		}
+
+		return __( 'The company name does not match this VAT number in the EU register. Check the company name to buy without VAT, or continue with VAT.', 'beltoft-eu-vat' );
+	}
+
+	/**
 	 * The grace wording: VIES is down and an earlier confirmation is used.
 	 *
 	 * @param VatDecision $decision A decision with grace set.
@@ -116,24 +145,31 @@ final class Messages {
 
 	/**
 	 * The line under the field after the inline check: array( text, state, retry ). State is
-	 * valid, notfound, unreachable, info or error. Retry shows the "Check again" link.
+	 * valid, name, notfound, unreachable, info or error. Retry shows the "Check again" link.
 	 *
 	 * @param VatDecision $decision Decision made with VIES allowed.
+	 * @param array       $entered  company, first_name, last_name as entered (name check).
 	 * @return array{0:string,1:string,2:bool}
 	 */
-	public static function inline( VatDecision $decision ): array {
+	public static function inline( VatDecision $decision, array $entered = array() ): array {
 		switch ( $decision->status ) {
 			case 'valid':
+				$notice = self::name_notice( $decision, $entered );
+
+				if ( '' !== $notice ) {
+					return array( $notice, 'name', false );
+				}
+
 				if ( $decision->grace ) {
 					return array( self::grace_text( $decision ), 'valid', false );
 				}
 
-				if ( '' !== $decision->registered_name ) {
+				if ( '' !== NameGate::clean( $decision->registered_name ) ) {
 					return array(
 						sprintf(
 							/* translators: %s: name VIES holds for the number */
 							__( 'Confirmed: %s. No VAT is charged (reverse charge).', 'beltoft-eu-vat' ),
-							$decision->registered_name
+							NameGate::clean( $decision->registered_name )
 						),
 						'valid',
 						false,

@@ -22,6 +22,13 @@ final class Settings {
 	public const CHECK_DOMESTIC = 'beltoft_eu_vat_check_domestic';
 	public const GRACE_DAYS     = 'beltoft_eu_vat_grace_days';
 
+	public const NAME_MATCH    = 'beltoft_eu_vat_name_match';
+	public const NAME_MISSING  = 'beltoft_eu_vat_name_missing';
+	public const NAME_DISCLOSE = 'beltoft_eu_vat_name_disclose';
+
+	public const ALLOW  = 'allow';
+	public const CHARGE = 'charge';
+
 	public const FLAG  = 'flag';
 	public const BLOCK = 'block';
 
@@ -96,6 +103,27 @@ final class Settings {
 	 */
 	public static function check_domestic(): bool {
 		return 'no' !== get_option( self::CHECK_DOMESTIC, 'yes' );
+	}
+
+	/**
+	 * Whether the company name must match the name the VAT register holds before VAT is removed. On by default.
+	 */
+	public static function name_match(): bool {
+		return 'no' !== get_option( self::NAME_MATCH, 'yes' );
+	}
+
+	/**
+	 * What to do when the register returns no name: allow (reverse charge as before) or charge VAT.
+	 */
+	public static function name_missing(): string {
+		return self::CHARGE === get_option( self::NAME_MISSING, self::ALLOW ) ? self::CHARGE : self::ALLOW;
+	}
+
+	/**
+	 * Whether the registered name is shown to a customer whose company name does not match. On by default.
+	 */
+	public static function name_disclose(): bool {
+		return 'no' !== get_option( self::NAME_DISCLOSE, 'yes' );
 	}
 
 	/**

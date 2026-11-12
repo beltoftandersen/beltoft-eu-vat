@@ -149,6 +149,8 @@ final class ReviewQueue {
 			__( 'Consultation number', 'beltoft-eu-vat' ) => $order->get_meta( OrderEvidence::REQUEST_ID ),
 			__( 'Registered name', 'beltoft-eu-vat' ) => $order->get_meta( OrderEvidence::NAME ),
 			__( 'Checked at', 'beltoft-eu-vat' )      => $order->get_meta( OrderEvidence::CHECKED_AT ),
+			__( 'Company entered', 'beltoft-eu-vat' ) => $order->get_meta( OrderEvidence::ENTERED_NAME ),
+			__( 'Name matches register', 'beltoft-eu-vat' ) => self::name_result( $order ),
 		);
 
 		foreach ( $rows as $label => $value ) {
@@ -158,6 +160,26 @@ final class ReviewQueue {
 		}
 
 		echo '</div>';
+	}
+
+	/**
+	 * The name check result for the order box: "Yes (equal)" or "No (mismatch)", empty when none was made.
+	 *
+	 * @param \WC_Order $order Order.
+	 */
+	private static function name_result( \WC_Order $order ): string {
+		$match = (string) $order->get_meta( OrderEvidence::NAME_MATCH );
+
+		if ( '' === $match ) {
+			return '';
+		}
+
+		return sprintf(
+			/* translators: 1: Yes or No, 2: reason such as equal, contains or mismatch */
+			__( '%1$s (%2$s)', 'beltoft-eu-vat' ),
+			'yes' === $match ? __( 'Yes', 'beltoft-eu-vat' ) : __( 'No', 'beltoft-eu-vat' ),
+			(string) $order->get_meta( OrderEvidence::NAME_REASON )
+		);
 	}
 
 	/**

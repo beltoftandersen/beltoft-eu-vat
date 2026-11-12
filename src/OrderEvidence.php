@@ -24,6 +24,11 @@ final class OrderEvidence {
 	public const REVIEW     = '_beltoft_eu_vat_review';
 	public const GRACE      = '_beltoft_eu_vat_grace';
 
+	/** The company (else the person) the customer entered, the match result (yes or no) and the reason. */
+	public const ENTERED_NAME = '_beltoft_eu_vat_entered_name';
+	public const NAME_MATCH   = '_beltoft_eu_vat_name_match';
+	public const NAME_REASON  = '_beltoft_eu_vat_name_reason';
+
 	/**
 	 * Hooks.
 	 */
@@ -66,7 +71,18 @@ final class OrderEvidence {
 			$order->update_meta_data( '_' . Field::KEY, $number );
 		}
 
-		self::write( $order, $decision );
+		self::write(
+			$order,
+			$decision,
+			NameGate::judge(
+				$decision,
+				array(
+					'company'    => (string) ( $data['billing_company'] ?? '' ),
+					'first_name' => (string) ( $data['billing_first_name'] ?? '' ),
+					'last_name'  => (string) ( $data['billing_last_name'] ?? '' ),
+				)
+			)
+		);
 	}
 
 	/**
@@ -83,8 +99,9 @@ final class OrderEvidence {
 	 *
 	 * @param \WC_Order   $order    Order.
 	 * @param VatDecision $decision Decision.
+	 * @param array|null  $judged   NameGate::judge() result; the name evidence is written when a judgement applied.
 	 */
-	public static function write( \WC_Order $order, VatDecision $decision ): void {
+	public static function write( \WC_Order $order, VatDecision $decision, ?array $judged = null ): void {
 		if ( '' === $decision->status || 'ignored' === $decision->status ) {
 			return;
 		}
@@ -96,6 +113,24 @@ final class OrderEvidence {
 		$order->update_meta_data( self::REQUEST_ID, $consulted ? $decision->request_identifier : '' );
 		$order->update_meta_data( self::NAME, $consulted ? $decision->registered_name : '' );
 		$order->update_meta_data( self::CHECKED_AT, $consulted && $decision->checked_at ? gmdate( 'c', $decision->checked_at ) : '' );
+
+		if ( null !== $judged && ! empty( $judged['checked'] ) ) {
+			$order->update_meta_data( self::ENTERED_NAME, $judged['entered'] );
+			$order->update_meta_data( self::NAME_MATCH, $judged['ok'] ? 'yes' : 'no' );
+			$order->update_meta_data( self::NAME_REASON, $judged['reason'] );
+
+			if ( ! $judged['ok'] ) {
+				$order->add_order_note(
+					sprintf(
+						/* translators: 1: company the customer entered, 2: name in the VAT register, 3: reason */
+						__( 'VAT charged: the company name does not match the VAT register. Entered: %1$s. Registered: %2$s (%3$s).', 'beltoft-eu-vat' ),
+						'' !== $judged['entered'] ? $judged['entered'] : __( 'nothing', 'beltoft-eu-vat' ),
+						'' !== $judged['registered'] ? $judged['registered'] : __( 'no name', 'beltoft-eu-vat' ),
+						$judged['reason']
+					)
+				);
+			}
+		}
 
 		if ( $decision->grace ) {
 			$order->update_meta_data( self::GRACE, 'yes' );

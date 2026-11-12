@@ -103,8 +103,13 @@
 		return true;
 	}
 
+	function billing( id ) {
+		return String( $( '#' + id ).val() || '' ).replace( /\s+/g, ' ' ).trim();
+	}
+
+	// The company and the billing name are part of the check: the register's name must match them.
 	function signature() {
-		return normalised() + '|' + country();
+		return normalised() + '|' + country() + '|' + billing( 'billing_company' ) + '|' + billing( 'billing_first_name' ) + '|' + billing( 'billing_last_name' );
 	}
 
 	function toggleWrapper() {
@@ -189,7 +194,15 @@
 			method: 'POST',
 			dataType: 'json',
 			timeout: 25000,
-			data: { security: data.nonce, vat: number, country: country(), retry: again ? 1 : 0 }
+			data: {
+				security: data.nonce,
+				vat: number,
+				country: country(),
+				company: billing( 'billing_company' ),
+				first_name: billing( 'billing_first_name' ),
+				last_name: billing( 'billing_last_name' ),
+				retry: again ? 1 : 0
+			}
 		} ).done( function ( reply ) {
 			if ( id === seq ) {
 				show( reply.text, reply.state, reply.retry );
@@ -263,6 +276,13 @@
 	$( document.body ).on( 'change', '#billing_country', function () {
 		toggleWrapper();
 
+		if ( normalised() && applies() && signature() !== last ) {
+			check( false );
+		}
+	} );
+
+	// A changed company or name is checked again against the register's name, once the customer leaves the field.
+	$( document.body ).on( 'change', '#billing_company, #billing_first_name, #billing_last_name', function () {
 		if ( normalised() && applies() && signature() !== last ) {
 			check( false );
 		}

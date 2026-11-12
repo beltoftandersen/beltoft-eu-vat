@@ -18,7 +18,7 @@ class CheckoutTest extends TestCase {
 	}
 
 	private function refresh( string $number, string $country ): string {
-		do_action( 'woocommerce_checkout_update_order_review', 'billing_eu_vat_number=' . rawurlencode( $number ) . '&billing_country=' . $country );
+		do_action( 'woocommerce_checkout_update_order_review', 'billing_eu_vat_number=' . rawurlencode( $number ) . '&billing_company=ACME+GmbH&billing_country=' . $country );
 		$fragments = apply_filters( 'woocommerce_update_order_review_fragments', array() );
 
 		return $fragments['.beltoft-eu-vat-message'] ?? '';

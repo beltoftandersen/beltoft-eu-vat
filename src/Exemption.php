@@ -85,6 +85,11 @@ final class Exemption {
 			return false;
 		}
 
+		// The number is valid; its holder must be the customer. No match: VAT is charged, the order goes on.
+		if ( ! NameGate::allows( $decision, NameGate::entered() ) ) {
+			return false;
+		}
+
 		$destination = self::destination();
 
 		return Countries::is_eu( $destination ) && Settings::seller_country() !== $destination;

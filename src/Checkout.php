@@ -49,7 +49,7 @@ final class Checkout {
 	/**
 	 * What this request posted: the submission, else the last refresh, else null.
 	 *
-	 * @return array{number:string,billing_country:string,shipping_country:string,shipping_postcode:string,ship_different:bool}|null
+	 * @return array{number:string,billing_country:string,shipping_country:string,shipping_postcode:string,ship_different:bool,company:string,first_name:string,last_name:string}|null
 	 */
 	public static function posted(): ?array {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- WooCommerce verifies the checkout nonce before the checkout hooks run; nothing here changes state.
@@ -73,7 +73,7 @@ final class Checkout {
 	 * Picks and cleans the relevant values.
 	 *
 	 * @param array $fields Posted fields.
-	 * @return array{number:string,billing_country:string,shipping_country:string,shipping_postcode:string,ship_different:bool}
+	 * @return array{number:string,billing_country:string,shipping_country:string,shipping_postcode:string,ship_different:bool,company:string,first_name:string,last_name:string}
 	 */
 	private static function extract( array $fields ): array {
 		$text = static function ( $key ) use ( $fields ): string {
@@ -86,6 +86,9 @@ final class Checkout {
 			'shipping_country'  => strtoupper( $text( 'shipping_country' ) ),
 			'shipping_postcode' => $text( 'shipping_postcode' ),
 			'ship_different'    => ! empty( $fields['ship_to_different_address'] ),
+			'company'           => $text( 'billing_company' ),
+			'first_name'        => $text( 'billing_first_name' ),
+			'last_name'         => $text( 'billing_last_name' ),
 		);
 	}
 
@@ -135,6 +138,18 @@ final class Checkout {
 		if ( 'invalid_format' === $decision->status ) {
 			$text = '';
 			$type = '';
+		}
+
+		// A valid number whose holder is not the company entered: VAT is charged and the customer is told why.
+		$notice = Messages::name_notice( $decision, array(
+			'company'    => self::$review['company'],
+			'first_name' => self::$review['first_name'],
+			'last_name'  => self::$review['last_name'],
+		) );
+
+		if ( '' !== $notice ) {
+			$text = $notice;
+			$type = 'info';
 		}
 
 		$fragments['.beltoft-eu-vat-message'] = Field::message_html( $text, $type );

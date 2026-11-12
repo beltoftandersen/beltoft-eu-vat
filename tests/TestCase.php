@@ -41,7 +41,8 @@ abstract class TestCase extends \WP_UnitTestCase {
 		$this->requests = 0;
 		$this->bodies   = array();
 		$this->vies     = 'unreachable';
-		$_POST          = array();
+		// The cached VIES answer is for ACME GmbH: a customer of that company, unless a test says otherwise.
+		$_POST          = array( 'billing_company' => 'ACME GmbH' );
 
 		add_filter( 'pre_http_request', array( $this, 'fake_http' ), 1, 3 );
 		wc_clear_notices();

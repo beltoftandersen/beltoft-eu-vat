@@ -40,7 +40,7 @@ final class Inline {
 	/**
 	 * Answers one check.
 	 *
-	 * @param array $post Posted values: security, vat, country, retry.
+	 * @param array $post Posted values: security, vat, country, retry, company, first_name, last_name.
 	 * @return array{status:int,body:array<string,mixed>}
 	 */
 	public static function respond( array $post ): array {
@@ -75,8 +75,16 @@ final class Inline {
 			ViesClient::forget_unreachable( $code, $bare );
 		}
 
-		$decision            = Decisions::get( $number, $country, true );
-		list( $text, $state, $retry ) = Messages::inline( $decision );
+		$text_of  = static function ( string $key ) use ( $post ): string {
+			return isset( $post[ $key ] ) && is_string( $post[ $key ] ) ? sanitize_text_field( $post[ $key ] ) : '';
+		};
+		$entered  = array(
+			'company'    => $text_of( 'company' ),
+			'first_name' => $text_of( 'first_name' ),
+			'last_name'  => $text_of( 'last_name' ),
+		);
+		$decision = Decisions::get( $number, $country, true );
+		list( $text, $state, $retry ) = Messages::inline( $decision, $entered );
 
 		return array(
 			'status' => 200,
@@ -151,7 +159,7 @@ final class Inline {
 	/**
 	 * Response body.
 	 *
-	 * @param string $state valid, notfound, unreachable, info, error or empty.
+	 * @param string $state valid, name, notfound, unreachable, info, error or empty.
 	 * @param string $text  Plain text for the line.
 	 * @param bool   $retry Whether "Check again" shows.
 	 * @return array<string,mixed>

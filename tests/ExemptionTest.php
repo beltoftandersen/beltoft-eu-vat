@@ -84,6 +84,7 @@ class ExemptionTest extends TestCase {
 		$this->cache_valid( 'DE', '123456789' );
 		WC()->customer = new \WC_Customer( $user );
 		WC()->customer->set_billing_country( 'DE' );
+		WC()->customer->set_billing_company( 'ACME GmbH' );
 
 		$this->assertTrue( Exemption::is_exempt(), 'account number is used when nothing was posted' );
 
@@ -110,7 +111,7 @@ class ExemptionTest extends TestCase {
 	public function test_the_checkout_refresh_applies_the_exemption_before_totals() {
 		$this->cache_valid( 'DE', '123456789' );
 
-		do_action( 'woocommerce_checkout_update_order_review', 'billing_eu_vat_number=DE123456789&billing_country=DE' );
+		do_action( 'woocommerce_checkout_update_order_review', 'billing_eu_vat_number=DE123456789&billing_company=ACME+GmbH&billing_country=DE' );
 
 		$this->assertTrue( WC()->customer->get_is_vat_exempt() );
 		$this->assertSame( 0, $this->requests );

@@ -23,7 +23,8 @@
 .beltoft-eu-vat-status.is-valid {
 	color: #1e7b34;
 }
-.beltoft-eu-vat-status.is-unreachable {
+.beltoft-eu-vat-status.is-unreachable,
+.beltoft-eu-vat-status.is-name {
 	color: #8a5a00;
 }
 .beltoft-eu-vat-status.is-checking,
