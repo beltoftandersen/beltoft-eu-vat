@@ -237,6 +237,9 @@
 			seq++;
 			xhr.abort();
 			xhr = null;
+			// The check that was dropped never answered: what it asked about is not judged, so it is asked again
+			// (a company name corrected just before the customer types here would otherwise keep the old judgement).
+			last = null;
 		}
 
 		if ( line().text() || line().attr( 'class' ) !== 'beltoft-eu-vat-status' ) {

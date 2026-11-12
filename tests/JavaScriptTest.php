@@ -42,6 +42,13 @@ class JavaScriptTest extends TestCase {
 		$this->assertMatchesRegularExpression( "#on\( 'keydown', field, function \( event \) \{\s*if \( 13 !== event\.which \) \{\s*return;\s*\}\s*event\.preventDefault\(\);\s*if \( signature\(\) !== last \) \{\s*check\( false \);#s", $code );
 	}
 
+	public function test_a_check_dropped_by_typing_is_asked_again() {
+		$js = (string) file_get_contents( dirname( __DIR__ ) . '/assets/checkout.js' );
+
+		// Dropping an unanswered check must forget what it asked about, or a name corrected just before stays unjudged.
+		$this->assertMatchesRegularExpression( '/xhr\.abort\(\);\s*xhr = null;\s*(?:\/\/[^\n]*\s*)*last = null;/', $js );
+	}
+
 	public function test_an_incomplete_number_is_not_sent() {
 		$code = $this->code();
 
